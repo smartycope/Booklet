@@ -3,6 +3,7 @@ import spidev
 import logging
 import numpy as np
 from gpiozero import DigitalOutputDevice, DigitalInputDevice, PWMOutputDevice
+import atexit
 
 class Screen:
     #GPIO define
@@ -60,6 +61,8 @@ class Screen:
 
         if clear:
             self.clear()
+
+        atexit.register(self.close)
 
     @property
     def brightness(self):

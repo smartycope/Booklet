@@ -1,4 +1,5 @@
 # import spidev as SPI
+import atexit
 import logging
 # import ST7789
 import time
@@ -56,3 +57,7 @@ image = Image.open('icon.png')
 im_r=image.rotate(270)
 disp.show_image(im_r)
 time.sleep(3)
+
+while True:
+    time.sleep(0.1)
+
