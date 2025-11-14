@@ -34,9 +34,6 @@ class Screen:
         self.spi_freq = spi_freq
         self.bl_freq = bl_freq
 
-        self._brightness = 0
-        self.brightness = brightness
-
         self.gpio_rst_pin= DigitalOutputDevice(rst, active_high=True, initial_value=False)
         self.gpio_dc_pin = DigitalOutputDevice(dc, active_high=True, initial_value=False)
         self.gpio_bl_pin = PWMOutputDevice(bl, frequency=self.bl_freq)
@@ -57,6 +54,10 @@ class Screen:
         self.spi.mode = 0b00
 
         self.init_display()
+
+        self._brightness = 0
+        self.brightness = brightness
+
         if clear:
             self.clear()
 
