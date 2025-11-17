@@ -8,10 +8,7 @@ from signal import pause
 try:
     from BaseScreen import BaseScreen
 except ImportError:
-    try:
-        from .BaseScreen import BaseScreen
-    except ImportError:
-        from src.BaseScreen import BaseScreen
+    from src.BaseScreen import BaseScreen
 
 class Screen(BaseScreen):
     def __init__(self,

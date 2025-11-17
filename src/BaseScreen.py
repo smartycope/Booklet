@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from gpiozero import Button
 import atexit
-from globals import WIDTH, HEIGHT
+try:
+    from globals import WIDTH, HEIGHT
+except ImportError:
+    from src.globals import WIDTH, HEIGHT
 
 class BaseScreen(ABC):
     KEY_UP_PIN    = 6
