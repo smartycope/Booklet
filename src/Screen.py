@@ -167,14 +167,14 @@ class Screen(BaseScreen):
         self.send_command(0x29)
 
     def set_windows(self, x_start, y_start, x_end, y_end):
-        #set the X coordinates
+        # Set the X coordinates
         self.send_command(0x2A)
-        self.send_data(0x00)               #Set the horizontal starting point to the high octet
-        self.send_data(x_start & 0xff)     #Set the horizontal starting point to the low octet
-        self.send_data(0x00)               #Set the horizontal end to the high octet
-        self.send_data((x_end - 1) & 0xff) #Set the horizontal end to the low octet
+        self.send_data(0x00)               # Set the horizontal starting point to the high octet
+        self.send_data(x_start & 0xff)     # Set the horizontal starting point to the low octet
+        self.send_data(0x00)               # Set the horizontal end to the high octet
+        self.send_data((x_end - 1) & 0xff) # Set the horizontal end to the low octet
 
-        #set the Y coordinates
+        # Set the Y coordinates
         self.send_command(0x2B)
         self.send_data(0x00)
         self.send_data((y_start & 0xff))
@@ -190,7 +190,7 @@ class Screen(BaseScreen):
         imwidth, imheight = image.size
         if imwidth != self.width or imheight != self.height:
             raise ValueError(f"Image must be same dimensions as display ({imwidth}x{imheight}, should be {self.width}x{self.height})")
-        img = np.asarray(image)
+        img = np.asarray(image.rotate(270))
         pix = np.zeros((self.width,self.height,2), dtype = np.uint8)
         pix[..., 0] = np.add(np.bitwise_and(img[..., 0],0xF8), np.right_shift(img[..., 1], 5))
         pix[..., 1] = np.add(np.bitwise_and(np.left_shift(img[..., 1], 3), 0xE0), np.right_shift(img[..., 2], 3))
