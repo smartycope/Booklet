@@ -5,7 +5,13 @@ import numpy as np
 from gpiozero import DigitalOutputDevice, Button, PWMOutputDevice
 import atexit
 from signal import pause
-from BaseScreen import BaseScreen
+try:
+    from BaseScreen import BaseScreen
+except ImportError:
+    try:
+        from .BaseScreen import BaseScreen
+    except ImportError:
+        from src.BaseScreen import BaseScreen
 
 class Screen(BaseScreen):
     def __init__(self,
