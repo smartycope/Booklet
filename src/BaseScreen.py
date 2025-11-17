@@ -3,6 +3,7 @@ from gpiozero import Button
 import atexit
 try:
     from globals import WIDTH, HEIGHT
+# For test scripts -- can be removed eventually
 except ImportError:
     from src.globals import WIDTH, HEIGHT
 

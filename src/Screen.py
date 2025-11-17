@@ -7,6 +7,7 @@ import atexit
 from signal import pause
 try:
     from BaseScreen import BaseScreen
+# For test scripts -- can be removed eventually
 except ImportError:
     from src.BaseScreen import BaseScreen
 
@@ -205,10 +206,9 @@ class Screen(BaseScreen):
         pix = np.zeros((imwidth, imheight, 2), dtype = np.uint8)
         pix[..., 0] = np.add(np.bitwise_and(img[..., 0],0xF8), np.right_shift(img[..., 1], 5))
         pix[..., 1] = np.add(np.bitwise_and(np.left_shift(img[..., 1], 3), 0xE0), np.right_shift(img[..., 2], 3))
-        # pix[...,[0]] = np.add(np.bitwise_and(img[...,[0]],0xF8),np.right_shift(img[...,[1]],5))
-        # pix[...,[1]] = np.add(np.bitwise_and(np.left_shift(img[...,[1]],3),0xE0),np.right_shift(img[...,[2]],3))
+
         # TODO: test to see if the tolist is necessary
-        pix = pix.flatten().tolist()
+        pix = pix.flatten()#.tolist()
 
         self.set_windows(x_start, y_start, x_end, y_end)
         self.gpio_dc_pin.on()
