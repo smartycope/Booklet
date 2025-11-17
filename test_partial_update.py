@@ -3,7 +3,8 @@ import atexit
 import logging
 # import ST7789
 import time
-from Screen import Screen
+# from Screen import Screen
+from src.Screen import Screen
 
 from PIL import Image,ImageDraw,ImageFont
 
