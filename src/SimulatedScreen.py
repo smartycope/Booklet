@@ -1,14 +1,18 @@
-import time
-import spidev
-import logging
-import numpy as np
-from gpiozero import DigitalOutputDevice, Button, PWMOutputDevice
 import atexit
-import pygame
+import logging
+import time
 
-from gpiozero import Device, LED
+import numpy as np
+import spidev
+from gpiozero import LED, Button, Device, DigitalOutputDevice, PWMOutputDevice
 from gpiozero.pins.mock import MockFactory
+
 from BaseScreen import BaseScreen
+from globals import DEBUG
+
+# The pi doesn't have pygame, nor should it
+if DEBUG:
+    import pygame
 
 class SimulatedScreen(BaseScreen):
     def __init__(self, rescale=False):
