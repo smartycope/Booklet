@@ -9,7 +9,7 @@ from BaseScreen import BaseScreen
 
 class Screen(BaseScreen):
     def __init__(self,
-        clear=False,
+        # clear=False,
         brightness=1,
         spi=None,
         spi_freq=40000000,
@@ -36,8 +36,8 @@ class Screen(BaseScreen):
         self._brightness = 0
         self.brightness = brightness
 
-        if clear:
-            self.clear()
+        # if clear:
+        #     self.clear()
 
         atexit.register(self.close)
 
@@ -183,8 +183,8 @@ class Screen(BaseScreen):
 
         self.send_command(0x2C)
 
-    def show_image(self, image):
-        """Set buffer to value of Python Imaging Library image.
+    def show_image(self, image, x_start=0, y_start=0, x_end=None, y_end=None):
+        """ Set buffer to value of Python Imaging Library image.
             Write display buffer to physical display
         """
         imwidth, imheight = image.size
@@ -196,19 +196,20 @@ class Screen(BaseScreen):
         pix[..., 1] = np.add(np.bitwise_and(np.left_shift(img[..., 1], 3), 0xE0), np.right_shift(img[..., 2], 3))
         # pix[...,[0]] = np.add(np.bitwise_and(img[...,[0]],0xF8),np.right_shift(img[...,[1]],5))
         # pix[...,[1]] = np.add(np.bitwise_and(np.left_shift(img[...,[1]],3),0xE0),np.right_shift(img[...,[2]],3))
+        # TODO: test to see if the tolist is necessary
         pix = pix.flatten().tolist()
-        self.set_windows(0, 0, self.width, self.height)
+        self.set_windows(x_start, y_start, x_end or self.width, y_end or self.height)
         self.gpio_dc_pin.on()
-        for i in range(0, len(pix), 4096):
+        for i in range(0, len(pix),  4096):
             self.spi.writebytes(pix[i:i+4096])
 
-    def clear(self):
-        """Clear contents of image buffer"""
-        _buffer = [0xff] * (self.width * self.height * 2)
-        self.set_windows(0, 0, self.width, self.height)
-        self.gpio_dc_pin.on()
-        for i in range(0, len(_buffer), 4096):
-            self.spi.writebytes(_buffer[i:i+4096])
+    # def clear(self):
+    #     """Clear contents of image buffer"""
+    #     _buffer = [0xff] * (self.width * self.height * 2)
+    #     self.set_windows(0, 0, self.width, self.height)
+    #     self.gpio_dc_pin.on()
+    #     for i in range(0, len(_buffer), 4096):
+    #         self.spi.writebytes(_buffer[i:i+4096])
 
     def listen(self):
         pause()
