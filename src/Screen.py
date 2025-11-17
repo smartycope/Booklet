@@ -2,36 +2,23 @@ import time
 import spidev
 import logging
 import numpy as np
-from gpiozero import DigitalOutputDevice, DigitalInputDevice, PWMOutputDevice
+from gpiozero import DigitalOutputDevice, Button, PWMOutputDevice
 import atexit
+from signal import pause
+from BaseScreen import BaseScreen
 
-class Screen:
-    #GPIO define
-    KEY_UP_PIN    = 6
-    KEY_DOWN_PIN  = 19
-    KEY_LEFT_PIN  = 5
-    KEY_RIGHT_PIN = 26
-    KEY_PRESS_PIN = 13
-
-    KEY1_PIN      = 21
-    KEY2_PIN      = 20
-    KEY3_PIN      = 16
-
-    width  = 240
-    height = 240
-
+class Screen(BaseScreen):
     def __init__(self,
-        clear=True,
+        clear=False,
         brightness=1,
-        spi=spidev.SpiDev(0,0),
+        spi=None,
         spi_freq=40000000,
         rst = 27,
         dc = 25,
         bl = 24,
         bl_freq=1000,
-        # i2c=None,
-        # i2c_freq=100000
     ):
+        super().__init__()
         self.spi_freq = spi_freq
         self.bl_freq = bl_freq
 
@@ -39,18 +26,8 @@ class Screen:
         self.gpio_dc_pin = DigitalOutputDevice(dc, active_high=True, initial_value=False)
         self.gpio_bl_pin = PWMOutputDevice(bl, frequency=self.bl_freq)
 
-        self.gpio_key_up_pin    = DigitalInputDevice(self.KEY_UP_PIN, pull_up=True, active_state=None)
-        self.gpio_key_down_pin  = DigitalInputDevice(self.KEY_DOWN_PIN, pull_up=True, active_state=None)
-        self.gpio_key_left_pin  = DigitalInputDevice(self.KEY_LEFT_PIN, pull_up=True, active_state=None)
-        self.gpio_key_right_pin = DigitalInputDevice(self.KEY_RIGHT_PIN, pull_up=True, active_state=None)
-        self.gpio_key_press_pin = DigitalInputDevice(self.KEY_PRESS_PIN, pull_up=True, active_state=None)
-
-        self.gpio_key1_pin      = DigitalInputDevice(self.KEY1_PIN, pull_up=True, active_state=None)
-        self.gpio_key2_pin      = DigitalInputDevice(self.KEY2_PIN, pull_up=True, active_state=None)
-        self.gpio_key3_pin      = DigitalInputDevice(self.KEY3_PIN, pull_up=True, active_state=None)
-
         #Initialize SPI
-        self.spi = spi
+        self.spi = spi or spidev.SpiDev(0,0)
         self.spi.max_speed_hz = spi_freq
         self.spi.mode = 0b00
 
@@ -233,4 +210,5 @@ class Screen:
         for i in range(0, len(_buffer), 4096):
             self.spi.writebytes(_buffer[i:i+4096])
 
-
+    def listen(self):
+        pause()
