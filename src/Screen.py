@@ -202,13 +202,14 @@ class Screen(BaseScreen):
         if imwidth != x_end - x_start or imheight != y_end - y_start:
             raise ValueError(f"Image must be same dimensions as window: got ({imwidth}x{imheight}), expected ({x_end - x_start}x{y_end - y_start})")
         img = np.asarray(image.rotate(270))
-        pix = np.zeros((self.width,self.height,2), dtype = np.uint8)
+        pix = np.zeros((imwidth, imheight, 2), dtype = np.uint8)
         pix[..., 0] = np.add(np.bitwise_and(img[..., 0],0xF8), np.right_shift(img[..., 1], 5))
         pix[..., 1] = np.add(np.bitwise_and(np.left_shift(img[..., 1], 3), 0xE0), np.right_shift(img[..., 2], 3))
         # pix[...,[0]] = np.add(np.bitwise_and(img[...,[0]],0xF8),np.right_shift(img[...,[1]],5))
         # pix[...,[1]] = np.add(np.bitwise_and(np.left_shift(img[...,[1]],3),0xE0),np.right_shift(img[...,[2]],3))
         # TODO: test to see if the tolist is necessary
         pix = pix.flatten().tolist()
+
         self.set_windows(x_start, y_start, x_end, y_end)
         self.gpio_dc_pin.on()
         for i in range(0, len(pix),  4096):
