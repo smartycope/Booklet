@@ -190,9 +190,17 @@ class Screen(BaseScreen):
         """ Set buffer to value of Python Imaging Library image.
             Write display buffer to physical display
         """
+        x_end = x_end or self.width
+        y_end = y_end or self.height
+
+        assert x_start >= 0 and x_start < self.width
+        assert y_start >= 0 and y_start < self.height
+        assert x_end >= 0 and x_end <= self.width
+        assert y_end >= 0 and y_end <= self.height
+
         imwidth, imheight = image.size
-        if imwidth != self.width or imheight != self.height:
-            raise ValueError(f"Image must be same dimensions as display ({imwidth}x{imheight}, should be {self.width}x{self.height})")
+        if imwidth != x_end - x_start or imheight != y_end - y_start:
+            raise ValueError(f"Image must be same dimensions as window: got ({imwidth}x{imheight}), expected ({x_end - x_start}x{y_end - y_start})")
         img = np.asarray(image.rotate(270))
         pix = np.zeros((self.width,self.height,2), dtype = np.uint8)
         pix[..., 0] = np.add(np.bitwise_and(img[..., 0],0xF8), np.right_shift(img[..., 1], 5))
@@ -201,7 +209,7 @@ class Screen(BaseScreen):
         # pix[...,[1]] = np.add(np.bitwise_and(np.left_shift(img[...,[1]],3),0xE0),np.right_shift(img[...,[2]],3))
         # TODO: test to see if the tolist is necessary
         pix = pix.flatten().tolist()
-        self.set_windows(x_start, y_start, x_end or self.width, y_end or self.height)
+        self.set_windows(x_start, y_start, x_end, y_end)
         self.gpio_dc_pin.on()
         for i in range(0, len(pix),  4096):
             self.spi.writebytes(pix[i:i+4096])

@@ -47,14 +47,13 @@ disp = Screen()
 # disp.show_image(im_r)
 # time.sleep(3)
 # logging.info("show image")
-image0 = Image.new("RGB", (100, 100), "BLUE")
+image0 = Image.new("RGB", (240, 240), "BLUE")
 disp.show_image(image0)
 time.sleep(3)
 
-image1 = Image.new("RGB", (100, 100), "WHITE")
-draw = ImageDraw.Draw(image1)
-
-draw.rectangle((25,25,75,75), fill = "BLACK")
+image1 = Image.new("RGB", (50, 50), "WHITE")
+# draw = ImageDraw.Draw(image1)
+# draw.rectangle((25,25,75,75), fill = "BLACK")
 disp.show_image(image1, x_start=25, y_start=25, x_end=75, y_end=75)
 # time.sleep(3)
 
