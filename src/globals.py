@@ -1,8 +1,18 @@
 from PIL import ImageFont
 import os
+from pathlib import Path
 
 DEBUG = os.uname().nodename == 'zeke'
-FONT = ImageFont.truetype("../assets/Orbitron-VariableFont_wght.ttf", size=24)
+ASSETS = Path("../assets").resolve()
 
 WIDTH = 240
 HEIGHT = 240
+
+_FONT_SIZE = 24
+THEME = {
+    "font": ImageFont.truetype((ASSETS / "Orbitron-VariableFont_wght.ttf").absolute(), size=_FONT_SIZE),
+    "text_size": _FONT_SIZE,
+    "text_color": "#3C2B23",
+    "bg": "#FFEFD7"
+}
+

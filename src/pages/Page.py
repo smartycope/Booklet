@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from PIL import Image, ImageDraw
-from globals import WIDTH, HEIGHT
+from globals import WIDTH, HEIGHT, THEME
 
 class Page(ABC):
     width = WIDTH
@@ -11,7 +11,7 @@ class Page(ABC):
         self.draw = ImageDraw.Draw(self.img)
 
     def first_image(self):
-        return Image.new("RGB", (self.width, self.height), "#FFEFD7")
+        return Image.new("RGB", (self.width, self.height), THEME["bg"])
 
     def up_pressed(self): pass
     def down_pressed(self): pass
