@@ -1,12 +1,12 @@
-from Screen import Screen
-from SimulatedScreen import SimulatedScreen
-from BaseScreen import BaseScreen
-from pages import pages, Page
+from src.screens.BaseScreen import BaseScreen
+from src.screens.Screen import Screen
+from src.screens.SimulatedScreen import SimulatedScreen
+from src.pages import pages, Page
 import os
 
-from GuiManager import GuiManager
+from src.GuiManager import GuiManager
 
-from globals import DEBUG
+from src.constants import DEBUG
 
 if __name__ == "__main__":
     # This number was chosen by trial and error. For a different monitor,

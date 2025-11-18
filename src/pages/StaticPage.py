@@ -1,4 +1,4 @@
-from .Page import Page
+from src.pages.Page import Page
 from PIL import Image
 
 class StaticPage(Page):

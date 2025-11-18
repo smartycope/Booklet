@@ -7,8 +7,8 @@ import spidev
 from gpiozero import LED, Button, Device, DigitalOutputDevice, PWMOutputDevice
 from gpiozero.pins.mock import MockFactory
 
-from BaseScreen import BaseScreen
-from globals import DEBUG
+from src.constants import DEBUG
+from src.screens.BaseScreen import BaseScreen
 
 # The pi doesn't have pygame, nor should it
 if DEBUG:
@@ -33,20 +33,18 @@ class SimulatedScreen(BaseScreen):
         self.screen.fill((0, 0, 0))
         pygame.display.update()
 
-    def show_image(self, image):
+    def show_image(self, image, x_start=0, y_start=0, x_end=None, y_end=None):
         """Set buffer to value of Python Imaging Library image.
             Write display buffer to physical display
         """
+        x_end = x_end or self.width
+        y_end = y_end or self.height
+
         imwidth, imheight = image.size
-        if imwidth != self.width or imheight != self.height:
-            raise ValueError(f"Image must be same dimensions as display ({imwidth}x{imheight}, should be {self.width}x{self.height})")
-        # img = np.asarray(image)
-        # pix = np.zeros((self.width,self.height,2), dtype = np.uint8)
-        # pix[..., 0] = np.add(np.bitwise_and(img[..., 0],0xF8), np.right_shift(img[..., 1], 5))
-        # pix[..., 1] = np.add(np.bitwise_and(np.left_shift(img[..., 1], 3), 0xE0), np.right_shift(img[..., 2], 3))
-        # # pix[...,[0]] = np.add(np.bitwise_and(img[...,[0]],0xF8),np.right_shift(img[...,[1]],5))
-        # # pix[...,[1]] = np.add(np.bitwise_and(np.left_shift(img[...,[1]],3),0xE0),np.right_shift(img[...,[2]],3))
-        # pix = pix.flatten().tolist()
+        if imwidth != x_end - x_start or imheight != y_end - y_start:
+            # raise ValueError(f"Image must be same dimensions as display ({imwidth}x{imheight}, should be {self.width}x{self.height})")
+            image = image.crop((x_start, y_start, x_end, y_end))
+
         mode = image.mode
         size = image.size
         data = image.tobytes()
@@ -54,7 +52,7 @@ class SimulatedScreen(BaseScreen):
         pygame_img = pygame.image.fromstring(data, size, mode)
         if self.rescale:
             pygame_img = pygame.transform.scale(pygame_img, self.rescale)
-        self.screen.blit(pygame_img, (0, 0))
+        self.screen.blit(pygame_img, (x_start, y_start))
         pygame.display.update()
 
     def listen(self):

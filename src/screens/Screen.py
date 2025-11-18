@@ -5,11 +5,7 @@ import numpy as np
 from gpiozero import DigitalOutputDevice, Button, PWMOutputDevice
 import atexit
 from signal import pause
-try:
-    from BaseScreen import BaseScreen
-# For test scripts -- can be removed eventually
-except ImportError:
-    from src.BaseScreen import BaseScreen
+from src.screens.BaseScreen import BaseScreen
 
 class Screen(BaseScreen):
     def __init__(self,
@@ -201,7 +197,9 @@ class Screen(BaseScreen):
 
         imwidth, imheight = image.size
         if imwidth != x_end - x_start or imheight != y_end - y_start:
-            raise ValueError(f"Image must be same dimensions as window: got ({imwidth}x{imheight}), expected ({x_end - x_start}x{y_end - y_start})")
+            # raise ValueError(f"Image must be same dimensions as window: got ({imwidth}x{imheight}), expected ({x_end - x_start}x{y_end - y_start})")
+            # If the dimensions don't match, assume we're only talking about part of the image
+            image = image.crop((x_start, y_start, x_end, y_end))
         img = np.asarray(image.rotate(270))
         pix = np.zeros((imwidth, imheight, 2), dtype = np.uint8)
         pix[..., 0] = np.add(np.bitwise_and(img[..., 0],0xF8), np.right_shift(img[..., 1], 5))

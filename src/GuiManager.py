@@ -1,5 +1,5 @@
 from functools import partial
-from pages.Page import Page
+from src.pages.Page import Page
 
 class GuiManager:
     """ Manage the connection between the screen and the pages. Handles events, and switches between pages. """
@@ -100,26 +100,38 @@ class GuiManager:
                         raise ValueError(f"Unknown device: {device}")
 
         # If the handler returns a string, goto that page
+        # using type is intentional here: returns are almost always going to be literal
         if type(rtn) is str:
-            print(f"Goto page: {rtn}")
             self.goto_page(rtn)
+        if isinstance(rtn, tuple):
+            # If the handler returns a tuple of a string and a dictionary, goto that page, and set those
+            # attributes on the page class
+            if type(rtn[0]) is str and type(rtn[1]) is dict:
+                self.goto_page(rtn[0], rtn[1])
+            # If the handler returns a tuple of 4 integers, partial update (should be a tuple of 4 integers)
+            # x1, x2, y1, y2
+            elif len(rtn) == 4:
+                self.render(rtn)
+            else:
+                raise ValueError(f"Invalid tuple: {rtn}")
         # If the handler returns True, render the current page
         elif rtn:
-            print("Render current page")
             self.render()
         # If the handler returns None, no modifications to self.current_page.img were made
 
-    def render(self):
-        self.screen.show_image(self.current_page.img)
+    def render(self, window=()):
+        self.screen.show_image(self.current_page.img, *window)
 
     @property
     def current_page(self):
         return self.pages[self.current_page_name]
 
-    def goto_page(self, name:str):
+    def goto_page(self, name:str, data:dict={}):
         if isinstance(name, str):
             if name in self.pages:
                 self.current_page_name = name
+                for k, v in data.items():
+                    setattr(self.current_page.__class__, k, v)
                 self.render()
             else:
                 raise ValueError(f"Page with name {name} does not exist")

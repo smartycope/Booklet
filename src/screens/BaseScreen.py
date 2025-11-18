@@ -5,7 +5,7 @@ try:
     from globals import WIDTH, HEIGHT
 # For test scripts -- can be removed eventually
 except ImportError:
-    from src.globals import WIDTH, HEIGHT
+    from src.constants import WIDTH, HEIGHT
 
 class BaseScreen(ABC):
     KEY_UP_PIN    = 6
@@ -38,7 +38,7 @@ class BaseScreen(ABC):
     def close(self): pass
 
     @abstractmethod
-    def show_image(self, image): pass
+    def show_image(self, image, x_start=0, y_start=0, x_end=None, y_end=None): pass
 
     @abstractmethod
     def listen(self): pass

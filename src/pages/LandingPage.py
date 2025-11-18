@@ -1,8 +1,10 @@
-from .StaticPage import StaticPage
-from globals import THEME, ASSETS
+from src.constants import ASSETS, THEME
+
+from src.pages.StaticPage import StaticPage
+
 
 class LandingPage(StaticPage):
-    img_path = ASSETS / "icon.png"
+    img_path = ASSETS / "landing.png"
 
     def center_pressed(self):
         # self.draw.rectangle((10, 10, self.width-20, self.height-20), outline=0, fill=0)
@@ -10,4 +12,10 @@ class LandingPage(StaticPage):
         return True
 
     def down_pressed(self):
-        return 'test'
+        return 'settings'
+
+    def left_pressed(self):
+        return 'spotify playlist'
+
+    def right_pressed(self):
+        return 'audiobookshelf landing'
