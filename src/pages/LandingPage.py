@@ -11,11 +11,8 @@ class LandingPage(StaticPage):
         self.draw.text((10, 10), "Hello World", fill=THEME["text_color"])
         return True
 
-    def down_pressed(self):
-        return 'settings'
-
     def left_pressed(self):
-        return 'spotify playlist'
+        return 'settings'
 
     def right_pressed(self):
         return 'audiobookshelf landing'

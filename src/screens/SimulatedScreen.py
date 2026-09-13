@@ -25,6 +25,15 @@ class SimulatedScreen(BaseScreen):
         pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
         self.rescale = rescale
 
+        # Print an explanation of the debug screen controls
+        print('''
+        Debug screen controls:
+        Arrow keys: simulate up/down/left/right button presses
+        Enter: simulate center button press
+        1, 2, 3: simulate button 1, 2, 3 presses
+        Escape: exit the program
+        ''')
+
     def close(self):
         pygame.quit()
 

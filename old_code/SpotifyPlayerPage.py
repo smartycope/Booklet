@@ -1,8 +1,7 @@
 from src.pages.PlayerPage import PlayerPage
-from src.players.SpotifyPlayer import SpotifyPlayer
+from old_code.SpotifyPlayer import SpotifyPlayer
 
 
 class SpotifyPlayerPage(PlayerPage):
     id = 'spotify player'
     player_cls = SpotifyPlayer
-

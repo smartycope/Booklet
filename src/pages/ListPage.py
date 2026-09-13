@@ -37,9 +37,15 @@ class ListPage(Page):
         for i, item in enumerate(self.items):
             y = self._item_y(i)
             if i == self.selected_index:
-                # TODO: this needs work, it's close enough for now
+                text_bbox = self.draw.textbbox((2, y), item, font=THEME['font'])
+                padding = self.vspacing // 2
                 self.draw.rounded_rectangle(
-                    (0, y+(self.vspacing//2), self.width, y + self._text_height + (self.vspacing*2)),
+                    (
+                        0,
+                        text_bbox[1] - padding,
+                        self.width - 1,
+                        text_bbox[3] + padding,
+                    ),
                     fill=THEME["text_color"],
                     radius=THEME['radius']
                 )
