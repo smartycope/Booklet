@@ -21,7 +21,15 @@ class BaseScreen(ABC):
     width  = WIDTH
     height = HEIGHT
 
-    def __init__(self):
+    @property
+    def brightness(self):
+        return self._brightness
+
+    @brightness.setter
+    def brightness(self, value):
+        self._brightness = value
+
+    def __init__(self, brightness=1):
         self.gpio_key_up_pin    = Button(self.KEY_UP_PIN, pull_up=True, active_state=None)
         self.gpio_key_down_pin  = Button(self.KEY_DOWN_PIN, pull_up=True, active_state=None)
         self.gpio_key_left_pin  = Button(self.KEY_LEFT_PIN, pull_up=True, active_state=None)
@@ -31,6 +39,8 @@ class BaseScreen(ABC):
         self.gpio_key1_pin      = Button(self.KEY1_PIN, pull_up=True, active_state=None)
         self.gpio_key2_pin      = Button(self.KEY2_PIN, pull_up=True, active_state=None)
         self.gpio_key3_pin      = Button(self.KEY3_PIN, pull_up=True, active_state=None)
+
+        self.brightness = brightness
 
         atexit.register(self.close)
 

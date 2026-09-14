@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from PIL import Image, ImageDraw
 from src.constants import WIDTH, HEIGHT, THEME
+from src.screens.BaseScreen import BaseScreen
 
 class Page(ABC):
     width = WIDTH
     height = HEIGHT
+    screen: BaseScreen = None
 
     def __init__(self, **goto_page):
         self.img = self.first_image()
@@ -59,4 +61,3 @@ class Page(ABC):
     def key1_held(self): pass
     def key2_held(self): pass
     def key3_held(self): pass
-

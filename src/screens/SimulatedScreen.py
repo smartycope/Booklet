@@ -15,9 +15,9 @@ if DEBUG:
     import pygame
 
 class SimulatedScreen(BaseScreen):
-    def __init__(self, rescale=False):
+    def __init__(self, rescale=False, **kwargs):
         Device.pin_factory = MockFactory()
-        super().__init__()
+        super().__init__(**kwargs)
 
         pygame.display.init()
 
@@ -27,11 +27,11 @@ class SimulatedScreen(BaseScreen):
 
         # Print an explanation of the debug screen controls
         print('''
-        Debug screen controls:
-        Arrow keys: simulate up/down/left/right button presses
-        Enter: simulate center button press
-        1, 2, 3: simulate button 1, 2, 3 presses
-        Escape: exit the program
+            Debug screen controls:
+            Arrow keys: simulate up/down/left/right button presses
+            Enter: simulate center button press
+            1, 2, 3: simulate button 1, 2, 3 presses
+            Escape: exit the program
         ''')
 
     def close(self):
@@ -43,7 +43,7 @@ class SimulatedScreen(BaseScreen):
         pygame.display.update()
 
     def show_image(self, image, x_start=0, y_start=0, x_end=None, y_end=None):
-        """Set buffer to value of Python Imaging Library image.
+        """ Set buffer to value of Python Imaging Library image.
             Write display buffer to physical display
         """
         x_end = x_end or self.width
@@ -52,6 +52,7 @@ class SimulatedScreen(BaseScreen):
         imwidth, imheight = image.size
         if imwidth != x_end - x_start or imheight != y_end - y_start:
             # raise ValueError(f"Image must be same dimensions as display ({imwidth}x{imheight}, should be {self.width}x{self.height})")
+            print(f"Image dimensions ({imwidth}x{imheight}) do not match display dimensions ({self.width}x{self.height}), cropping image to fit")
             image = image.crop((x_start, y_start, x_end, y_end))
 
         mode = image.mode
@@ -62,6 +63,11 @@ class SimulatedScreen(BaseScreen):
         if self.rescale:
             pygame_img = pygame.transform.scale(pygame_img, self.rescale)
         self.screen.blit(pygame_img, (x_start, y_start))
+
+        # simulate brightness
+        byte = int(self.brightness * 255)
+        self.screen.blit(pygame.image.fromstring(bytes([byte, byte, byte]) * self.width * self.height, (self.width, self.height), 'RGB'), (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
         pygame.display.update()
 
     def listen(self):

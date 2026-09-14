@@ -11,17 +11,20 @@ from src.pages.AudiobookShelfDownloadPage import AudiobookShelfDownloadPage
 # from old_code.SpotifyPlayerPage import SpotifyPlayerPage
 from src.pages.SettingsPage import SettingsPage
 from src.pages.AudiobookShelfLandingPage import AudiobookShelfLandingPage
+from src.pages.BarLevelPage import BarLevelPage
+from src.pages.VolumePage import VolumePage
+from src.pages.BrightnessPage import BrightnessPage
+from src.pages.BluetoothPage import BluetoothPage
 
 pages = {
     "landing": LandingPage(),
-
-    # "spotify playlist": SpotifyPlaylistPage(),
 
     "audiobookshelf landing": AudiobookShelfLandingPage(),
     "audiobookshelf local": AudiobookShelfLocalPage(),
     "audiobookshelf download": AudiobookShelfDownloadPage(),
 
     "settings": SettingsPage(),
-
-    # "spotify player": SpotifyPlayerPage(),
+    "brightness": BrightnessPage(),
+    "volume": VolumePage(),
+    "bluetooth": BluetoothPage(),
 }

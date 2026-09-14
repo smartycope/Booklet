@@ -9,16 +9,15 @@ from src.screens.BaseScreen import BaseScreen
 
 class Screen(BaseScreen):
     def __init__(self,
-        # clear=False,
-        brightness=1,
         spi=None,
         spi_freq=40000000,
         rst = 27,
         dc = 25,
         bl = 24,
         bl_freq=1000,
+        **kwargs
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.spi_freq = spi_freq
         self.bl_freq = bl_freq
 
@@ -32,12 +31,6 @@ class Screen(BaseScreen):
         self.spi.mode = 0b00
 
         self.init_display()
-
-        self._brightness = 0
-        self.brightness = brightness
-
-        # if clear:
-        #     self.clear()
 
         atexit.register(self.close)
 

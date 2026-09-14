@@ -1,10 +1,11 @@
 from functools import partial
 from src.pages.Page import Page
+from src.screens.BaseScreen import BaseScreen
 
 class GuiManager:
     """ Manage the connection between the screen and the pages. Handles events, and switches between pages. """
-    def __init__(self, screen, pages:dict[str, Page], start_page: str):
-        self.screen = screen
+    def __init__(self, screen: BaseScreen, pages:dict[str, Page], start_page: str):
+        self.screen = Page.screen = screen
         self.pages = pages
         self.goto_page(start_page)
 
@@ -103,7 +104,7 @@ class GuiManager:
         # using type is intentional here: returns are almost always going to be literal
         if type(rtn) is str:
             self.goto_page(rtn)
-        if isinstance(rtn, tuple):
+        elif isinstance(rtn, tuple):
             # If the handler returns a tuple of a string and a dictionary, goto that page, and set those
             # attributes on the page class
             if type(rtn[0]) is str and type(rtn[1]) is dict:
@@ -115,9 +116,11 @@ class GuiManager:
             else:
                 raise ValueError(f"Invalid tuple: {rtn}")
         # If the handler returns True, render the current page
-        elif rtn:
+        elif rtn is True:
             self.render()
         # If the handler returns None, no modifications to self.current_page.img were made
+        elif rtn not in (False, None):
+            raise ValueError(f"Invalid return value from event handler: `{rtn}` on page `{self.current_page_name}` for event `{event}` on device {device}")
 
     def render(self, window=()):
         self.screen.show_image(self.current_page.img, *window)
