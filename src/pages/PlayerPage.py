@@ -1,36 +1,34 @@
 import subprocess
 
+from src.aobject import aobject
 from src.pages.Page import Page
-from src.players.AudioPlayer import AudioPlayer
 
+class PlayerPage(Page, aobject):
+    # id: str
 
-class PlayerPage(Page):
-    id: str
-    player_cls: AudioPlayer
-
-    def __init__(self, **kwargs):
+    async def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.player = self.player_cls()
 
-    def center_held(self):
-        return "landing"
+    # TODO: should this add a bookmark instead?
+    async def center_held(self):
+        return 'Landing'
 
-    def center_pressed(self):
-        self.player.play_pause()
+    async def center_pressed(self):
+        self.manager.player.play_pause()
         return True
 
-    def left_pressed(self):
-        self.player.prev()
+    async def left_pressed(self):
+        self.manager.player.prev()
         return True
 
-    def right_pressed(self):
-        self.player.next()
+    async def right_pressed(self):
+        self.manager.player.next()
         return True
 
-    def up_pressed(self):
-        self.player.volume_up()
+    async def up_pressed(self):
+        self.manager.player.volume_up()
         return True
 
-    def down_pressed(self):
-        self.player.volume_down()
+    async def down_pressed(self):
+        self.manager.player.volume_down()
         return True

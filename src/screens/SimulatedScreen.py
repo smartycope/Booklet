@@ -1,3 +1,4 @@
+import asyncio
 import atexit
 import logging
 import time
@@ -7,7 +8,7 @@ import spidev
 from gpiozero import LED, Button, Device, DigitalOutputDevice, PWMOutputDevice
 from gpiozero.pins.mock import MockFactory
 
-from src.constants import DEBUG
+from src import DEBUG
 from src.screens.BaseScreen import BaseScreen
 
 # The pi doesn't have pygame, nor should it
@@ -70,12 +71,57 @@ class SimulatedScreen(BaseScreen):
 
         pygame.display.update()
 
-    def listen(self):
-        while True:
+    # def listen(self):
+    #     while True:
+    #         for event in pygame.event.get():
+    #             if event.type == pygame.QUIT:
+    #                 self.close()
+    #                 exit(0)
+    #             elif event.type == pygame.KEYDOWN:
+    #                 if event.key == pygame.K_UP:
+    #                     self.gpio_key_up_pin.pin.drive_low()
+    #                 elif event.key == pygame.K_DOWN:
+    #                     self.gpio_key_down_pin.pin.drive_low()
+    #                 elif event.key == pygame.K_LEFT:
+    #                     self.gpio_key_left_pin.pin.drive_low()
+    #                 elif event.key == pygame.K_RIGHT:
+    #                     self.gpio_key_right_pin.pin.drive_low()
+    #                 elif event.key == pygame.K_RETURN:
+    #                     self.gpio_key_center_pin.pin.drive_low()
+    #                 elif event.key == pygame.K_1:
+    #                     self.gpio_key1_pin.pin.drive_low()
+    #                 elif event.key == pygame.K_2:
+    #                     self.gpio_key2_pin.pin.drive_low()
+    #                 elif event.key == pygame.K_3:
+    #                     self.gpio_key3_pin.pin.drive_low()
+    #                 elif event.key == pygame.K_ESCAPE:
+    #                     self.close()
+    #                     exit(0)
+    #             elif event.type == pygame.KEYUP:
+    #                 if event.key == pygame.K_UP:
+    #                     self.gpio_key_up_pin.pin.drive_high()
+    #                 elif event.key == pygame.K_DOWN:
+    #                     self.gpio_key_down_pin.pin.drive_high()
+    #                 elif event.key == pygame.K_LEFT:
+    #                     self.gpio_key_left_pin.pin.drive_high()
+    #                 elif event.key == pygame.K_RIGHT:
+    #                     self.gpio_key_right_pin.pin.drive_high()
+    #                 elif event.key == pygame.K_RETURN:
+    #                     self.gpio_key_center_pin.pin.drive_high()
+    #                 elif event.key == pygame.K_1:
+    #                     self.gpio_key1_pin.pin.drive_high()
+    #                 elif event.key == pygame.K_2:
+    #                     self.gpio_key2_pin.pin.drive_high()
+    #                 elif event.key == pygame.K_3:
+    #                     self.gpio_key3_pin.pin.drive_high()
+
+    async def listen(self):
+        running = True
+
+        while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.close()
-                    exit(0)
+                    running = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
                         self.gpio_key_up_pin.pin.drive_low()
@@ -94,8 +140,7 @@ class SimulatedScreen(BaseScreen):
                     elif event.key == pygame.K_3:
                         self.gpio_key3_pin.pin.drive_low()
                     elif event.key == pygame.K_ESCAPE:
-                        self.close()
-                        exit(0)
+                        running = False
                 elif event.type == pygame.KEYUP:
                     if event.key == pygame.K_UP:
                         self.gpio_key_up_pin.pin.drive_high()
@@ -113,3 +158,7 @@ class SimulatedScreen(BaseScreen):
                         self.gpio_key2_pin.pin.drive_high()
                     elif event.key == pygame.K_3:
                         self.gpio_key3_pin.pin.drive_high()
+
+            await asyncio.sleep(0.01)
+
+        self.close()

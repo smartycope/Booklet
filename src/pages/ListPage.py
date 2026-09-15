@@ -1,10 +1,11 @@
-from abc import abstractmethod
-from typing import Callable, Any
-from src.constants import THEME
+from typing import Any
+from src import THEME
 from src.pages.Page import Page
+from src.aobject import aobject
 
-class ListPage(Page):
-    def __init__(self, items: list[str] | dict[str, Any], scrollable, title='', vspacing=6, **kwargs):
+
+class ListPage(Page, aobject):
+    async def __init__(self, items: list[str] | dict[str, Any], scrollable, title='', vspacing=6, **kwargs):
         super().__init__(**kwargs)
         self.item_map = items if isinstance(items, dict) else {k: k for k in items}
         self.items = list(items)
@@ -54,17 +55,17 @@ class ListPage(Page):
                 bbox = self.text(item, 2, y)
 
     # TODO: these could be optimized
-    def down_pressed(self):
+    async def down_pressed(self):
         self.selected_index = (self.selected_index + 1) % len(self.items)
         self._draw_items()
         return True
 
-    def up_pressed(self):
+    async def up_pressed(self):
         self.selected_index = (self.selected_index - 1) % len(self.items)
         self._draw_items()
         return True
 
-    def center_pressed(self):
+    async def center_pressed(self):
         return self.item_selected(self.item_map[self.selected_item])
 
     def item_selected(self, item):

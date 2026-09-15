@@ -1,28 +1,28 @@
 from collections.abc import Callable
 
-from src.constants import THEME
+from src import THEME
+from src.aobject import aobject
 from src.pages.Page import Page
 
 
-class BarLevelPage(Page):
+class BarLevelPage(Page, aobject):
     """A page for displaying and changing a normalized value as a bar."""
 
-    def __init__(
+    async def __init__(
         self,
         title: str,
         level: float = 0.5,
         step: float = 0.1,
         on_change: Callable[[float], None] | None = None,
-        **kwargs,
     ):
         if step <= 0:
             raise ValueError("step must be greater than zero")
 
+        super().__init__()
         self.title = title
         self.step = step
         self.on_change = on_change
         self._level = self._clamp(level)
-        super().__init__(**kwargs)
         self._draw_page()
 
     @staticmethod
@@ -86,14 +86,14 @@ class BarLevelPage(Page):
             bar_bottom + 12,
         )
 
-    def up_pressed(self):
+    async def up_pressed(self):
         return self.set_level(self.level + self.step)
 
-    def down_pressed(self):
+    async def down_pressed(self):
         return self.set_level(self.level - self.step)
 
-    def up_held(self):
-        return self.up_pressed()
+    async def up_held(self):
+        return await self.up_pressed()
 
-    def down_held(self):
-        return self.down_pressed()
+    async def down_held(self):
+        return await self.down_pressed()

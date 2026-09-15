@@ -1,19 +1,20 @@
 from abc import ABC, abstractmethod
 from PIL import Image, ImageDraw
-from src.constants import WIDTH, HEIGHT, THEME
-from src.screens.BaseScreen import BaseScreen
+from src import WIDTH, HEIGHT, THEME
+from src.aobject import aobject
+# from src.GuiManager import GuiManager
 
 class Page(ABC):
     width = WIDTH
     height = HEIGHT
-    screen: BaseScreen = None
+    manager: 'GuiManager'
 
-    def __init__(self, **goto_page):
+    def __init__(self):
         self.img = self.first_image()
         self.draw = ImageDraw.Draw(self.img)
 
-        for key, value in goto_page.items():
-            setattr(self, key, lambda: value)
+        # for key, value in goto_page.items():
+        #     setattr(self, key, lambda: value)
 
     def first_image(self):
         return Image.new("RGB", (self.width, self.height), THEME["bg"])
@@ -35,29 +36,29 @@ class Page(ABC):
         self.img = self.first_image()
         self.draw = ImageDraw.Draw(self.img)
 
-    def up_pressed(self): pass
-    def down_pressed(self): pass
-    def left_pressed(self): pass
-    def right_pressed(self): pass
-    def center_pressed(self): pass
-    def key1_pressed(self): pass
-    def key2_pressed(self): pass
-    def key3_pressed(self): pass
+    async def up_pressed(self): pass
+    async def down_pressed(self): pass
+    async def left_pressed(self): pass
+    async def right_pressed(self): pass
+    async def center_pressed(self): pass
+    async def key1_pressed(self): pass
+    async def key2_pressed(self): pass
+    async def key3_pressed(self): pass
 
-    def up_released(self): pass
-    def down_released(self): pass
-    def left_released(self): pass
-    def right_released(self): pass
-    def center_released(self): pass
-    def key1_released(self): pass
-    def key2_released(self): pass
-    def key3_released(self): pass
+    async def up_released(self): pass
+    async def down_released(self): pass
+    async def left_released(self): pass
+    async def right_released(self): pass
+    async def center_released(self): pass
+    async def key1_released(self): pass
+    async def key2_released(self): pass
+    async def key3_released(self): pass
 
-    def up_held(self): pass
-    def down_held(self): pass
-    def left_held(self): pass
-    def right_held(self): pass
-    def center_held(self): pass
-    def key1_held(self): pass
-    def key2_held(self): pass
-    def key3_held(self): pass
+    async def up_held(self): pass
+    async def down_held(self): pass
+    async def left_held(self): pass
+    async def right_held(self): pass
+    async def center_held(self): pass
+    async def key1_held(self): pass
+    async def key2_held(self): pass
+    async def key3_held(self): pass

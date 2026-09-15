@@ -1,7 +1,7 @@
-from src.players.AudioPlayer import AudioPlayer
+from src.AudioPlayer import AudiobookshelfPlayer
 
 
-class SpotifyPlayer(AudioPlayer):
+class SpotifyPlayer(AudiobookshelfPlayer):
     def play(self, path):
         pass
 

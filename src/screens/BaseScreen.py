@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
 from gpiozero import Button
 import atexit
+
+from src import CONFIG
 try:
     from globals import WIDTH, HEIGHT
 # For test scripts -- can be removed eventually
 except ImportError:
-    from src.constants import WIDTH, HEIGHT
+    from src import WIDTH, HEIGHT
 
 class BaseScreen(ABC):
     KEY_UP_PIN    = 6
@@ -23,11 +25,12 @@ class BaseScreen(ABC):
 
     @property
     def brightness(self):
-        return self._brightness
+        return CONFIG['brightness']
 
     @brightness.setter
     def brightness(self, value):
-        self._brightness = value
+        CONFIG['brightness'] = value
+        CONFIG.sync()
 
     def __init__(self, brightness=1):
         self.gpio_key_up_pin    = Button(self.KEY_UP_PIN, pull_up=True, active_state=None)
@@ -51,4 +54,4 @@ class BaseScreen(ABC):
     def show_image(self, image, x_start=0, y_start=0, x_end=None, y_end=None): pass
 
     @abstractmethod
-    def listen(self): pass
+    async def listen(self): pass

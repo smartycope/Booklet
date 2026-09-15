@@ -1,3 +1,4 @@
+import asyncio
 import time
 import spidev
 import logging
@@ -5,6 +6,7 @@ import numpy as np
 from gpiozero import DigitalOutputDevice, Button, PWMOutputDevice
 import atexit
 from signal import pause
+from src import CONFIG
 from src.screens.BaseScreen import BaseScreen
 
 class Screen(BaseScreen):
@@ -18,6 +20,7 @@ class Screen(BaseScreen):
         **kwargs
     ):
         super().__init__(**kwargs)
+        self.brightness = CONFIG.get('brightness', 1.0)
         self.spi_freq = spi_freq
         self.bl_freq = bl_freq
 
@@ -36,11 +39,11 @@ class Screen(BaseScreen):
 
     @property
     def brightness(self):
-        return self._brightness
+        return super().brightness
 
     @brightness.setter
     def brightness(self, value):
-        self._brightness = value
+        super().brightness = value
         self.gpio_bl_pin.value = value / 2
 
     def close(self):
@@ -214,5 +217,10 @@ class Screen(BaseScreen):
     #     for i in range(0, len(_buffer), 4096):
     #         self.spi.writebytes(_buffer[i:i+4096])
 
-    def listen(self):
-        pause()
+    # def listen(self):
+    #     pause()
+
+    # Screen.py
+
+    async def listen(self):
+        await asyncio.Event().wait()

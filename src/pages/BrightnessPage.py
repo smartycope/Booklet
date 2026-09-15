@@ -1,15 +1,18 @@
+from src import CONFIG
 from src.pages.BarLevelPage import BarLevelPage
-
+from src.pages.SettingsPage import SettingsPage
 
 class BrightnessPage(BarLevelPage):
-    def __init__(self):
-        super().__init__(
+    async def __init__(self):
+        await super().__init__(
             title="Brightness",
-            level=1.0,
-            right_pressed="settings",
+            level=CONFIG.get('brightness', 1.0),
         )
 
     def set_level(self, level: float):
         if super().set_level(level):
-            BrightnessPage.screen.brightness = level
+            self.manager.screen.brightness = level
             return True
+
+    async def right_pressed(self):
+        return 'Settings'

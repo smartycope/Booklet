@@ -1,18 +1,22 @@
 from src.pages.ListPage import ListPage
 
-
 class SettingsPage(ListPage):
-    def __init__(self):
-        super().__init__(
+    async def __init__(self):
+        await super().__init__(
             items={
-                'Brightness': 'brightness',
-                'Volume': 'volume',
-                'Bluetooth': 'bluetooth',
+                'Brightness': 'Brightness',
+                'Volume': 'Volume',
+                'Bluetooth': 'Bluetooth',
             },
             scrollable=False,
             title="Settings",
-            right_pressed='landing'
         )
 
     def item_selected(self, item):
         return item
+
+    async def left_pressed(self):
+        return self.item_selected(self.item_map[self.selected_item])
+
+    async def right_pressed(self):
+        return 'Landing'

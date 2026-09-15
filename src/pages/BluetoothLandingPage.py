@@ -1,9 +1,10 @@
+from src.pages.LandingPage import LandingPage
 from src.pages.ListPage import ListPage
-from src.constants import TODO
+from src import TODO
 
-class BluetoothPage(ListPage):
-    def __init__(self):
-        super().__init__(
+class BluetoothLandingPage(ListPage):
+    async def __init__(self):
+        await super().__init__(
             items=self.scan(),
             scrollable=True,
             title="Bluetooth"
@@ -18,6 +19,5 @@ class BluetoothPage(ListPage):
     def item_selected(self, item):
         return self.connect(item)
 
-    def up_pressed(self):
-        return 'landing'
-
+    async def right_pressed(self):
+        return 'Settings'
