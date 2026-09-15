@@ -9,7 +9,7 @@ from src.AudiobookshelfApiManager import AudiobookshelfApiManager
 from src.screens.BaseScreen import BaseScreen
 
 from src.pages.AudiobookshelfLandingPage import AudiobookshelfLandingPage
-from src.pages.BluetoothLandingPage import BluetoothPage
+from src.pages.BluetoothLandingPage import BluetoothLandingPage
 from src.pages.LandingPage import LandingPage
 from src.pages.LocalBooksPage import LocalBooksPage
 from src.pages.SelectBookPage import SelectBookPage

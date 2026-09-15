@@ -6,7 +6,7 @@ class SettingsPage(ListPage):
             items={
                 'Brightness': 'Brightness',
                 'Volume': 'Volume',
-                'Bluetooth': 'Bluetooth',
+                'Bluetooth': 'BluetoothLanding',
             },
             scrollable=False,
             title="Settings",

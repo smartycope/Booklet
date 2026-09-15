@@ -13,9 +13,6 @@ class Page(ABC):
         self.img = self.first_image()
         self.draw = ImageDraw.Draw(self.img)
 
-        # for key, value in goto_page.items():
-        #     setattr(self, key, lambda: value)
-
     def first_image(self):
         return Image.new("RGB", (self.width, self.height), THEME["bg"])
 
