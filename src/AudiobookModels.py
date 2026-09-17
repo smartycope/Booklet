@@ -48,6 +48,7 @@ class Book:
     series: list[Series] = field(default_factory=list)
     added_at: int = 0
     duration: float = 0.0
+    size: int = 0
     tracks: list[Track] = field(default_factory=list)
     chapters: list[Chapter] = field(default_factory=list)
 
@@ -107,6 +108,7 @@ class Book:
             series=series_items,
             added_at=int(value(item, "added_at", "addedAt", default=0) or 0),
             duration=float(value(media, "duration", default=value(item, "duration", default=0)) or 0),
+            size=int(value(media, "size", default=0) or 0),
             tracks=tracks,
             chapters=chapters,
         )
@@ -124,6 +126,7 @@ class Book:
             series=[Series(**item) for item in data.get("series", [])],
             added_at=int(data.get("added_at", 0)),
             duration=float(data.get("duration", 0)),
+            size=int(data.get("size", 0)),
             tracks=[Track(**item) for item in data.get("tracks", [])],
             chapters=[Chapter(**item) for item in data.get("chapters", [])],
         )

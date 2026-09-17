@@ -49,7 +49,7 @@ class PlayerPage(Page, aobject):
             self._draw()
             if self.manager.current_page is self:
                 self.manager.render()
-            if ticks % self.sync_interval == 0:
+            if ticks % self.sync_interval == 0 and self.manager.player.is_playing:
                 await self.manager.sync_active_playback(suppress_errors=True)
 
     def _fit(self, text: str, width: int | None = None) -> str:
@@ -99,7 +99,7 @@ class PlayerPage(Page, aobject):
             self.draw.line((4 + volume_text_width + spacer_width, y, 4 + volume_text_width + spacer_width + speed_text_width, y), fill=THEME["text_color"], width=2)
 
     # Toggle volume/speed mode
-    async def center_pressed(self):
+    async def center_released(self):
         self.volume_mode = not self.volume_mode
         self._draw()
         return True
@@ -130,6 +130,7 @@ class PlayerPage(Page, aobject):
             self.manager.player.volume_up()
         else:
             self.manager.player.rate_up()
+            self.manager.persist_playback_speed(self.book_id, self.manager.player.rate)
         self._draw()
         return True
 
@@ -139,6 +140,7 @@ class PlayerPage(Page, aobject):
             self.manager.player.volume_down()
         else:
             self.manager.player.rate_down()
+            self.manager.persist_playback_speed(self.book_id, self.manager.player.rate)
         self._draw()
         return True
 

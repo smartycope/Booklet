@@ -33,8 +33,15 @@ class BaseScreen(ABC):
         CONFIG.sync()
 
     def __init__(self, brightness=1):
-        self.gpio_key_up_pin    = Button(self.KEY_UP_PIN, pull_up=True, active_state=None)
-        self.gpio_key_down_pin  = Button(self.KEY_DOWN_PIN, pull_up=True, active_state=None)
+        self._display_awake = True
+        self.gpio_key_up_pin    = Button(
+            self.KEY_UP_PIN, pull_up=True, active_state=None,
+            hold_time=.2, hold_repeat=True,
+        )
+        self.gpio_key_down_pin  = Button(
+            self.KEY_DOWN_PIN, pull_up=True, active_state=None,
+            hold_time=.2, hold_repeat=True,
+        )
         self.gpio_key_left_pin  = Button(self.KEY_LEFT_PIN, pull_up=True, active_state=None)
         self.gpio_key_right_pin = Button(self.KEY_RIGHT_PIN, pull_up=True, active_state=None)
         self.gpio_key_center_pin= Button(self.KEY_CENTER_PIN, pull_up=True, active_state=None)
@@ -46,6 +53,18 @@ class BaseScreen(ABC):
         self.brightness = brightness
 
         atexit.register(self.close)
+
+    def sleep(self):
+        self._display_awake = False
+        backlight = getattr(self, "gpio_bl_pin", None)
+        if backlight is not None:
+            backlight.off()
+
+    def wake(self):
+        self._display_awake = True
+        backlight = getattr(self, "gpio_bl_pin", None)
+        if backlight is not None:
+            backlight.value = self.brightness / 2
 
     @abstractmethod
     def close(self): pass

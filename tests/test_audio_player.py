@@ -35,6 +35,7 @@ class FakePlayer:
     def get_state(self): return "Playing" if self.playing else "Paused"
     def audio_get_volume(self): return self.volume
     def audio_set_volume(self, volume): self.volume = volume
+    def set_rate(self, rate): self.rate = rate
     def release(self): pass
 
 
@@ -89,3 +90,11 @@ def test_track_end_advances_to_next_source():
     audio.poll()
     assert audio._track_index == 1
     assert audio._player.media.source == "two.mp3"
+
+
+def test_playback_rate_survives_track_changes():
+    audio = player()
+    audio.rate = 1.7
+    audio.seek(65)
+    assert audio.rate == 1.7
+    assert audio._player.rate == 1.7

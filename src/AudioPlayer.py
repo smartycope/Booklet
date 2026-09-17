@@ -25,6 +25,7 @@ class AudioPlayer:
         self._loaded = False
         self._ending = False
         self._track_ended = False
+        self._rate = 1.0
         event_type = getattr(getattr(self.vlc, "EventType", None), "MediaPlayerEndReached", None)
         if event_type is not None:
             self._player.event_manager().event_attach(event_type, self._on_track_end)
@@ -58,7 +59,7 @@ class AudioPlayer:
             media.add_option(f":start-time={local_time}")
         self._player.set_media(media)
         if autoplay:
-            self._player.play()
+            self.play()
         if local_time > 0:
             self._player.set_time(round(local_time * 1000))
 
@@ -66,6 +67,7 @@ class AudioPlayer:
         if not self._loaded:
             return
         self._player.play()
+        self._player.set_rate(self._rate)
 
     def pause(self):
         if self.is_playing:
@@ -182,12 +184,12 @@ class AudioPlayer:
 
     @property
     def rate(self) -> float:
-        level = self._player.get_rate()
-        return max(0.0, level)
+        return self._rate
 
     @rate.setter
     def rate(self, level: float):
-        self._player.set_rate(max(0.01, level))
+        self._rate = max(0.5, min(3.0, float(level)))
+        self._player.set_rate(self._rate)
 
     def rate_up(self):
         self.rate = self.rate + 0.1

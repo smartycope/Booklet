@@ -47,6 +47,8 @@ class SimulatedScreen(BaseScreen):
         """ Set buffer to value of Python Imaging Library image.
             Write display buffer to physical display
         """
+        if not self._display_awake:
+            return
         x_end = x_end or self.width
         y_end = y_end or self.height
 
@@ -70,6 +72,14 @@ class SimulatedScreen(BaseScreen):
         self.screen.blit(pygame.image.fromstring(bytes([byte, byte, byte]) * self.width * self.height, (self.width, self.height), 'RGB'), (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
 
         pygame.display.update()
+
+    def sleep(self):
+        super().sleep()
+        self.screen.fill((0, 0, 0))
+        pygame.display.update()
+
+    def wake(self):
+        super().wake()
 
     # def listen(self):
     #     while True:

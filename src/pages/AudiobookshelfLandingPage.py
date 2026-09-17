@@ -32,3 +32,6 @@ class AudiobookshelfLandingPage(ListPage):
 
     async def left_pressed(self):
         return 'Landing'
+
+    async def right_pressed(self):
+        return await self.center_pressed()

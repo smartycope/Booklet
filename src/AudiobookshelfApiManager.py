@@ -33,6 +33,8 @@ class AudiobookshelfApiManager:
         self.session = session
         self.host = host.rstrip("/") + "/"
         self.token = token or KEYS["audiobookshelf_api_key"]
+        self._books_cache: list[Book] | None = None
+        self._authors_cache: list[dict[str, Any]] | None = None
 
     @classmethod
     async def create(cls, session: aiohttp.ClientSession):
@@ -73,18 +75,21 @@ class AudiobookshelfApiManager:
                 return None
             return await response.json()
 
-    async def get_books(self, in_progress=False, expanded=False) -> list[Book]:
+    async def get_books(self, in_progress=False, expanded=False, refresh=False) -> list[Book]:
         if in_progress:
             return await self.get_in_progress_books()
-        books = []
-        async for response in self.client.get_library_items(library_id=self.library_id):
-            if not response.results:
-                break
-            books.extend(
-                Book.from_api(item)
-                for item in response.results
-                if isinstance(item, LibraryItemMinifiedBook)
-            )
+        if self._books_cache is None or refresh:
+            books = []
+            async for response in self.client.get_library_items(library_id=self.library_id):
+                if not response.results:
+                    break
+                books.extend(
+                    Book.from_api(item)
+                    for item in response.results
+                    if isinstance(item, LibraryItemMinifiedBook)
+                )
+            self._books_cache = books
+        books = list(self._books_cache)
         if expanded:
             return [await self.get_book(book.id) for book in books]
         return books
@@ -107,13 +112,15 @@ class AudiobookshelfApiManager:
             book.id = book_id
         return book
 
-    async def get_authors(self) -> list[dict[str, Any]]:
-        authors = await self.client.get_library_authors(library_id=self.library_id)
-        normalized = [
-            {"id": value(author, "id_", "id", default=""), "name": value(author, "name", default="Unknown Author")}
-            for author in authors
-        ]
-        return sorted(normalized, key=lambda author: author["name"].casefold())
+    async def get_authors(self, refresh=False) -> list[dict[str, Any]]:
+        if self._authors_cache is None or refresh:
+            authors = await self.client.get_library_authors(library_id=self.library_id)
+            normalized = [
+                {"id": value(author, "id_", "id", default=""), "name": value(author, "name", default="Unknown Author")}
+                for author in authors
+            ]
+            self._authors_cache = sorted(normalized, key=lambda author: author["name"].casefold())
+        return [dict(author) for author in self._authors_cache]
 
     async def get_filter_data(self) -> dict[str, Any]:
         data = await self.client.get_library_filterdata(library_id=self.library_id)

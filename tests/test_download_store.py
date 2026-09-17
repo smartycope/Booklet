@@ -7,6 +7,7 @@ import pytest
 
 from src.AudiobookModels import Book, Track
 from src.DownloadStore import DownloadStore
+from src.pages.DownloadBookPage import DownloadBookPage
 
 
 class ZipApi:
@@ -57,3 +58,9 @@ def test_delete_only_removes_requested_book(tmp_path):
     store.delete("first")
     assert not first.exists()
     assert second.exists()
+
+
+def test_download_size_uses_binary_human_readable_units():
+    assert DownloadBookPage._format_size(512) == "512 bytes"
+    assert DownloadBookPage._format_size(1536) == "1.5 KB"
+    assert DownloadBookPage._format_size(2 * 1024 * 1024) == "2.0 MB"

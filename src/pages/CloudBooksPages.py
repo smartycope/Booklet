@@ -43,8 +43,52 @@ class CloudListPage(ListPage):
     async def left_pressed(self):
         return self.back_route
 
+    async def right_pressed(self):
+        return await self.center_pressed()
+
     def item_selected(self, item):
         return item
+
+
+class JumpLetterMixin:
+    @staticmethod
+    def _starting_letter(label: str):
+        if label == "Refresh Library":
+            return None
+        if label.startswith("Series: "):
+            label = label.removeprefix("Series: ")
+        return next((character.upper() for character in label if character.isalpha()), None)
+
+    def _jump_letter(self, forward: bool):
+        if not self.items:
+            return
+        indexed_letters = [
+            (index, self._starting_letter(label))
+            for index, label in enumerate(self.items)
+        ]
+        indexed_letters = [(index, letter) for index, letter in indexed_letters if letter]
+        if not indexed_letters:
+            return
+        current = self._starting_letter(self.selected_item or "")
+        letters = sorted({letter for _index, letter in indexed_letters})
+        if current not in letters:
+            target = letters[0] if forward else letters[-1]
+        else:
+            position = letters.index(current)
+            target_position = position + (1 if forward else -1)
+            if target_position < 0 or target_position >= len(letters):
+                return
+            target = letters[target_position]
+        matches = [index for index, letter in indexed_letters if letter == target]
+        self._select_index(matches[0] if forward else matches[-1])
+
+    async def key1_pressed(self):
+        self._jump_letter(False)
+        return True
+
+    async def key3_pressed(self):
+        self._jump_letter(True)
+        return True
 
 
 class SelectCloudBookPage(CloudListPage):
@@ -57,7 +101,7 @@ class SelectCloudBookPage(CloudListPage):
                 ("In Progress", page_route("SelectInProgressBook", download=download, back_route=route)),
                 ("Recently Added", page_route("SelectRecentlyAdded", download=download, back_route=route)),
                 ("All Series/Books", page_route("SelectAllBooks", download=download, back_route=route)),
-                ("Select by Author", page_route("ChooseFromAuthor", download=download, back_route=route)),
+                ("Select by Author", page_route("ChooseByAuthor", download=download, back_route=route)),
                 ("Select by Genre", page_route("ChooseFromGenre", download=download, back_route=route)),
             ],
             scrollable=True,
@@ -99,50 +143,65 @@ class SelectRecentlyAddedPage(BookResultsPage):
         return self._route
 
 
-class SelectAllBooksPage(CloudListPage):
-    async def __init__(self, download=False, back_route="AudiobookshelfLanding"):
+class SelectAllBooksPage(JumpLetterMixin, CloudListPage):
+    async def __init__(self, download=False, back_route="AudiobookshelfLanding", refresh=False):
         self.back_route = back_route
         own_route = page_route("SelectAllBooks", download=download, back_route=back_route)
+        entries = [("Refresh Library", page_route(
+            "SelectAllBooks", download=download, back_route=back_route, refresh=True,
+        ))]
+        entries.extend(grouped_entries(
+            await self.manager.api.get_books(refresh=refresh), download, own_route,
+        ))
         await super().__init__(
-            items=grouped_entries(await self.manager.api.get_books(), download, own_route),
+            items=entries,
             scrollable=True,
             title="All Books",
             empty_text="No books found",
         )
 
 
-class ChooseFromAuthorPage(CloudListPage):
-    async def __init__(self, download=False, back_route="AudiobookshelfLanding"):
+class ChooseByAuthorPage(JumpLetterMixin, CloudListPage):
+    async def __init__(self, download=False, back_route="AudiobookshelfLanding", refresh=False):
         self.back_route = back_route
-        authors = await self.manager.api.get_authors()
-        own_route = page_route("ChooseFromAuthor", download=download, back_route=back_route)
+        authors = await self.manager.api.get_authors(refresh=refresh)
+        own_route = page_route("ChooseByAuthor", download=download, back_route=back_route)
+        entries = [("Refresh Library", page_route(
+            "ChooseByAuthor", download=download, back_route=back_route, refresh=True,
+        ))]
+        entries.extend(
+            (
+                author.get("name", "Unknown Author"),
+                page_route(
+                    "ChooseAuthorsBooks", author_id=author.get("id", ""),
+                    author_name=author.get("name", "Unknown Author"),
+                    download=download, back_route=own_route,
+                ),
+            )
+            for author in authors
+        )
         await super().__init__(
-            items=[
-                (
-                    author.get("name", "Unknown Author"),
-                    page_route(
-                        "ChooseAuthorBooks", author_id=author.get("id", ""),
-                        author_name=author.get("name", "Unknown Author"),
-                        download=download, back_route=own_route,
-                    ),
-                )
-                for author in authors
-            ],
+            items=entries,
             scrollable=True,
             title="Authors",
             empty_text="No authors found",
         )
 
 
-class ChooseAuthorBooksPage(CloudListPage):
-    async def __init__(self, author_id: str, author_name: str, download=False, back_route="ChooseFromAuthor"):
+class ChooseAuthorsBooksPage(CloudListPage):
+    async def __init__(
+        self, author_id: str, author_name: str, download=False,
+        back_route="ChooseByAuthor",
+    ):
         self.back_route = back_route
         own_route = page_route(
-            "ChooseAuthorBooks", author_id=author_id, author_name=author_name,
+            "ChooseAuthorsBooks", author_id=author_id, author_name=author_name,
             download=download, back_route=back_route,
         )
         await super().__init__(
-            items=grouped_entries(await self.manager.api.books_for_author(author_id), download, own_route),
+            items=grouped_entries(
+                await self.manager.api.books_for_author(author_id), download, own_route,
+            ),
             scrollable=True,
             title=author_name,
             empty_text="No books found",
@@ -150,7 +209,7 @@ class ChooseAuthorBooksPage(CloudListPage):
         )
 
 
-class ChooseFromGenrePage(CloudListPage):
+class ChooseFromGenrePage(JumpLetterMixin, CloudListPage):
     async def __init__(self, download=False, back_route="AudiobookshelfLanding"):
         self.back_route = back_route
         own_route = page_route("ChooseFromGenre", download=download, back_route=back_route)

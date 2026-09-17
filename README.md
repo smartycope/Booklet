@@ -50,10 +50,11 @@ The `audiobookshelf_url` is the URL of your audiobookshelf instance. It's self h
 
 ## TODO
 Not yet in scope, but eventually we'll want to implement:
-* playback-speed control
+* better playback acceleration algorithm
 * cover-art UI
 * bookmarks
 * search keyboard
+* Battery percentage in the player page (or possibly in Page)
 * background downloads?
 * concurrent downloads?
 * podcast support?

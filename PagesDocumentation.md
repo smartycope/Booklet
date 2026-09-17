@@ -8,7 +8,7 @@ AudiobookshelfLandingPage
             PlayerPage/DownloadBookPage
 
         "All Series/Books" -> SelectAllBooksPage
-        "Select by Author" -> ChooseFromAuthorPage
+        "Select by Author" -> ChooseByAuthorPage -> ChooseAuthorsBooksPage
         "Select by Genre" -> ChooseFromGenrePage
             # Go to the series page, if a series was selected, otherwise go straight to PlayerPage/DownloadBookPage
             ChooseFromSeries(series_id) -> PlayerPage/DownloadBookPage

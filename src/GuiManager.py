@@ -18,8 +18,8 @@ from src.pages.LocalBooksPage import LocalBooksPage
 from src.pages.LocalBooksPage import DeleteDownloadedBookPage, SelectDownloadedBookPage
 from src.pages.SelectBookPage import SelectBookPage
 from src.pages.CloudBooksPages import (
-    ChooseAuthorBooksPage,
-    ChooseFromAuthorPage,
+    ChooseAuthorsBooksPage,
+    ChooseByAuthorPage,
     ChooseFromGenrePage,
     ChooseFromSeriesPage,
     ChooseGenreBooksPage,
@@ -29,6 +29,8 @@ from src.pages.CloudBooksPages import (
     SelectInProgressBookPage,
 )
 from src.pages.DownloadBookPage import DownloadBookPage
+from src.pages.LoadingPage import LoadingPage
+from src.pages.ScreensaverPage import ScreensaverPage
 from src.pages.SettingsPage import SettingsPage
 from src.pages.StaticTextPage import StaticTextPage
 from src.pages.VolumePage import VolumePage
@@ -44,9 +46,11 @@ class GuiManager:
         self.pages = pages
         self.small_font = font(11)
         self.active_playback: PlaybackContext | None = None
+        self._navigation_busy = False
+        self._event_busy = False
+        self._inactivity_task = None
 
         self._current_page = first_page
-        # self.goto_page(first_page)
 
         self.loop = asyncio.get_running_loop()
 
@@ -79,7 +83,9 @@ class GuiManager:
         self.screen.gpio_key3_pin.when_held = partial(self.dispatch_event, event='held')
 
         Page.manager = self
+        self.player.volume = CONFIG.get("volume", 1.0)
         self.render()
+        self.reset_screensaver_timer()
 
 
     def dispatch_event(self, device, event=None):
@@ -102,6 +108,20 @@ class GuiManager:
             asyncio.run_coroutine_threadsafe(self.navigate(ErrorPage(exception)), self.loop)
 
     async def handle_event(self, device, event=None):
+        if isinstance(self.current_page, ScreensaverPage):
+            await self.wake_from_screensaver()
+            return
+        self.reset_screensaver_timer()
+        if self._navigation_busy or self._event_busy:
+            return
+        self._event_busy = True
+        try:
+            await self._handle_event(device, event)
+        finally:
+            self._event_busy = False
+            self.reset_screensaver_timer()
+
+    async def _handle_event(self, device, event=None):
         match event:
             case 'pressed':
                 match device:
@@ -174,17 +194,60 @@ class GuiManager:
         self.screen.show_image(self.current_page.img, *window)
 
     async def navigate_route(self, name, *args, **kwargs):
-        await self.current_page.on_exit()
-        page = await self.page(name, *args, **kwargs)
-        self._current_page = page
+        if self._navigation_busy:
+            return
+        self._navigation_busy = True
+        previous_page = self.current_page
+        self._current_page = LoadingPage()
         self.render()
-        await page.on_enter()
+        try:
+            await previous_page.on_exit()
+            page = await self.page(name, *args, **kwargs)
+            self.current_page = page
+            await page.on_enter()
+        finally:
+            self._navigation_busy = False
+            self.reset_screensaver_timer()
 
     async def navigate(self, page: Page):
         await self.current_page.on_exit()
-        self._current_page = page
-        self.render()
+        self.current_page = page
         await page.on_enter()
+        self.reset_screensaver_timer()
+
+    def reset_screensaver_timer(self):
+        task = self._inactivity_task
+        if task is not None and not task.done() and task is not asyncio.current_task():
+            task.cancel()
+        timeout = max(1.0, float(CONFIG.get("screensaver_timeout", 30)))
+        self._inactivity_task = asyncio.create_task(self._screensaver_after(timeout))
+
+    async def _screensaver_after(self, timeout):
+        try:
+            await asyncio.sleep(timeout)
+        except asyncio.CancelledError:
+            return
+        if self._navigation_busy or self._event_busy or isinstance(
+            self.current_page, (DownloadBookPage, BluetoothPage, ScreensaverPage, LoadingPage)
+        ):
+            return
+        previous_page = self.current_page
+        self._current_page = ScreensaverPage(previous_page)
+        self.render()
+        sleep = getattr(self.screen, "sleep", None)
+        if sleep is not None:
+            sleep()
+
+    async def wake_from_screensaver(self):
+        if not isinstance(self.current_page, ScreensaverPage):
+            return
+        previous_page = self.current_page.previous_page
+        wake = getattr(self.screen, "wake", None)
+        if wake is not None:
+            wake()
+        self._current_page = previous_page
+        self.render()
+        self.reset_screensaver_timer()
 
     # We do this to avoid circular imports
     @staticmethod
@@ -200,19 +263,10 @@ class GuiManager:
         # return pages[self.current_page_name]
         return self._current_page
 
-    # async def goto_page(self, page:Page|str):
-    #     if isinstance(page, str):
-    #         page = await self.page(page)
-    #     # self.current_page_name = page.__class__.__name__
-    #     self._current_page = page
-    #     self.render()
-
     @current_page.setter
     def current_page(self, page:Page):
-        # if isinstance(page, str):
-        #     page = await self.page(page)
-        # self.current_page_name = page.__class__.__name__
         self._current_page = page
+        print(f"Navigating to {self._current_page.__class__.__name__}")
         self.render()
 
     async def activate_book(self, book_id: str, local: bool, back_route):
@@ -244,6 +298,10 @@ class GuiManager:
         try:
             self.player.load(book.tracks, book.chapters, start_time)
             self.player.play()
+            speeds = CONFIG.get("playback_speeds", {})
+            self.player.rate = speeds.get(
+                book.id, CONFIG.get("default_playback_speed", 1.0)
+            )
         except Exception:
             if context.session_id:
                 try:
@@ -258,6 +316,12 @@ class GuiManager:
         CONFIG["current_book"] = {"book_id": book.id, "title": book.title, "local": local}
         CONFIG.sync()
         return context
+
+    def persist_playback_speed(self, book_id: str, speed: float):
+        speeds = dict(CONFIG.get("playback_speeds", {}))
+        speeds[book_id] = round(float(speed), 2)
+        CONFIG["playback_speeds"] = speeds
+        CONFIG.sync()
 
     async def sync_active_playback(self, suppress_errors=False):
         context = self.active_playback
@@ -316,27 +380,16 @@ class GuiManager:
         self.player.stop()
         self.active_playback = None
 
-    # def goto_page(self, name:str, data:dict={}):
-    #     if isinstance(name, str):
-    #         if name in pages:
-    #             self.current_page_name = name
-    #             for k, v in data.items():
-    #                 setattr(self.current_page.__class__, k, v)
-    #             self.render()
-    #         else:
-    #             raise ValueError(f"Page with name {name} does not exist")
-    #     else:
-    #         raise ValueError(f"Page name must be a string, not {type(name)}")
-
-    # def run(self):
-    #     self.screen.listen()
-    # GuiManager.py
-
     async def run(self):
         await self.current_page.on_enter()
         await self.screen.listen()
 
     async def shutdown(self):
-        await self.current_page.on_exit()
+        if self._inactivity_task and not self._inactivity_task.done():
+            self._inactivity_task.cancel()
+        page = self.current_page
+        if isinstance(page, ScreensaverPage):
+            page = page.previous_page
+        await page.on_exit()
         await self.close_active_playback(suppress_errors=True)
         self.player.close()

@@ -1,5 +1,6 @@
 import asyncio
 
+from src import CONFIG
 from src.AudiobookModels import Book, PlaybackSession, Track
 from src.GuiManager import GuiManager
 
@@ -58,3 +59,20 @@ def test_starting_different_book_closes_previous_session():
     asyncio.run(gui.activate_book("two", False, "Previous"))
     assert gui.api.closed[0][0] == "session-one"
     assert gui.active_playback.book.id == "two"
+
+
+def test_book_speed_uses_saved_value_or_default():
+    gui = manager()
+    CONFIG["playback_speeds"] = {"one": 1.7}
+    CONFIG["default_playback_speed"] = 1.2
+    asyncio.run(gui.activate_book("one", False, "Previous"))
+    assert gui.player.rate == 1.7
+    asyncio.run(gui.activate_book("two", False, "Previous"))
+    assert gui.player.rate == 1.2
+
+
+def test_persist_playback_speed_is_keyed_by_book():
+    gui = manager()
+    CONFIG["playback_speeds"] = {"other": 1.1}
+    gui.persist_playback_speed("book", 1.6)
+    assert CONFIG["playback_speeds"] == {"other": 1.1, "book": 1.6}

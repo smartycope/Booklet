@@ -17,7 +17,7 @@ class DownloadBookPage(Page, aobject):
         self.complete = False
         self.error = None
         self.downloaded = 0
-        self.total = None
+        self.total = self.book.size or None
         self._task = None
         self._draw()
 
@@ -28,7 +28,7 @@ class DownloadBookPage(Page, aobject):
             self.manager.render()
             return
         self.active = True
-        self._draw("Starting download")
+        self._draw("Starting download\nHold center to cancel")
         self.manager.render()
         self._task = asyncio.create_task(self._download())
 
@@ -46,11 +46,22 @@ class DownloadBookPage(Page, aobject):
             if self.manager.current_page is self:
                 self.manager.render()
 
-    def _progress(self, downloaded: int, total: int | None):
-        self.downloaded, self.total = downloaded, total
+    def _progress(self, downloaded: int, _response_total: int | None):
+        self.downloaded = downloaded
         self._draw()
         if self.manager.current_page is self:
             self.manager.render()
+
+    @staticmethod
+    def _format_size(size: int) -> str:
+        value = float(size)
+        units = ("bytes", "KB", "MB", "GB", "TB")
+        for unit in units:
+            if value < 1024 or unit == units[-1]:
+                if unit == "bytes":
+                    return f"{int(value)} {unit}"
+                return f"{value:.1f} {unit}"
+            value /= 1024
 
     def _draw(self, status=None):
         self.reset_img()
@@ -70,20 +81,35 @@ class DownloadBookPage(Page, aobject):
         elif self.complete:
             status = status or "Download complete\nLeft to return"
         elif self.total:
-            status = f"{round(self.downloaded * 100 / self.total)}%"
+            status = (
+                f"{self._format_size(self.downloaded)} / {self._format_size(self.total)}\n"
+                f"{min(100, round(self.downloaded * 100 / self.total))}%\n"
+                "Hold center to cancel"
+            )
         else:
-            status = status or f"{self.downloaded // 1024} KiB"
+            status = status or f"{self._format_size(self.downloaded)}\nHold center to cancel"
 
-        bar = (10, 105, self.width - 10, 132)
-        self.draw.rounded_rectangle(bar, outline=THEME["text_color"], width=2, radius=THEME["radius"])
-        if self.total and self.downloaded:
+        if self.total:
+            bar = (10, 96, self.width - 10, 123)
+            self.draw.rounded_rectangle(bar, outline=THEME["text_color"], width=2, radius=THEME["radius"])
             fraction = min(1.0, self.downloaded / self.total)
-            self.draw.rectangle((13, 108, 13 + round((self.width - 26) * fraction), 129), fill=THEME["text_color"])
+            fill_right = 13 + round((self.width - 26) * fraction)
+            if fill_right > 13:
+                self.draw.rectangle((13, 99, fill_right, 120), fill=THEME["text_color"])
         for index, line in enumerate(str(status).split("\n")):
-            self.text(line, 5, 150 + index * 24)
+            self.text(line, 5, 137 + index * 24, font=self.manager.small_font)
 
     async def left_pressed(self):
         if not self.active:
+            return self.back_route
+
+    async def center_held(self):
+        if self.active and self._task and not self._task.done():
+            self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                pass
             return self.back_route
 
     async def on_exit(self):

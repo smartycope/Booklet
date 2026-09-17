@@ -71,6 +71,10 @@ class FakeClient:
     async def sync_open_session(self, **kwargs): self.synced = kwargs
     async def close_open_session(self, **kwargs): self.closed = kwargs
 
+    async def get_library_authors(self, **_kwargs):
+        self.author_calls = getattr(self, "author_calls", 0) + 1
+        return [SimpleNamespace(id_="author", name="Author")]
+
 
 def manager():
     return AudiobookshelfApiManager(
@@ -108,3 +112,42 @@ def test_download_streams_to_file_with_progress(tmp_path):
     assert content_type == "audio/mp4"
     assert progress == [(3, 6), (6, 6)]
     assert api.session.headers == {"Authorization": "Bearer secret token"}
+
+
+def test_book_list_is_cached_until_refresh(monkeypatch):
+    import src.AudiobookshelfApiManager as api_module
+
+    class LibraryClient(FakeClient):
+        def __init__(self):
+            super().__init__()
+            self.calls = 0
+
+        async def get_library_items(self, **_kwargs):
+            self.calls += 1
+            yield SimpleNamespace(results=[{
+                "id": "book", "mediaType": "book",
+                "media": {"metadata": {"title": "Cached"}},
+            }])
+
+    monkeypatch.setattr(api_module, "LibraryItemMinifiedBook", object)
+    client = LibraryClient()
+    api = AudiobookshelfApiManager(client, "library", FakeSession(), host="https://example.test", token="token")
+    assert asyncio.run(api.get_books())[0].title == "Cached"
+    assert asyncio.run(api.get_books())[0].title == "Cached"
+    assert client.calls == 1
+    asyncio.run(api.get_books(refresh=True))
+    assert client.calls == 2
+
+
+def test_author_index_is_cached_until_refresh():
+    api = manager()
+    assert asyncio.run(api.get_authors())[0]["name"] == "Author"
+    asyncio.run(api.get_authors())
+    assert api.client.author_calls == 1
+    asyncio.run(api.get_authors(refresh=True))
+    assert api.client.author_calls == 2
+
+
+def test_book_normalizes_media_size():
+    from src.AudiobookModels import Book
+    assert Book.from_api({"id": "book", "media": {"size": 12345}}).size == 12345

@@ -37,6 +37,9 @@ class SelectDownloadedBookPage(ListPage):
     async def left_pressed(self):
         return "AudiobookshelfLanding"
 
+    async def right_pressed(self):
+        return await self.center_pressed()
+
 
 class LocalBooksPage(SelectDownloadedBookPage):
     """Compatibility route for older callers."""
