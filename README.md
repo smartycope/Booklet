@@ -27,6 +27,40 @@ TODO: Add a battery
 * Run program:
     * `python -m src`
 
+## Install as a systemd service
+
+`Booklet.service` is a per-user systemd unit. It assumes the repository contents are directly in the Pi user's home directory, so `~/src` exists. Install it in the user unit directory:
+
+```bash
+mkdir -p ~/.config/systemd/user
+cp ~/Booklet.service ~/.config/systemd/user/Booklet.service
+systemctl --user daemon-reload
+systemctl --user enable --now Booklet.service
+```
+
+Enable lingering so the user's service manager—and therefore Booklet—starts during boot without waiting for an interactive login:
+
+```bash
+sudo loginctl enable-linger "$USER"
+```
+
+Useful service commands:
+
+```bash
+systemctl --user status Booklet.service
+systemctl --user restart Booklet.service
+systemctl --user stop Booklet.service
+```
+
+The service runs `/usr/bin/python3 -m src` from `~`, restarts automatically after it exits, sends standard output to the systemd journal, and appends standard error to `~/booklet-errors.log`:
+
+```bash
+tail -f ~/booklet-errors.log
+journalctl --user -u Booklet.service -f
+```
+
+If the repository is stored somewhere other than directly in `~`, update `WorkingDirectory=` in the installed unit. If dependencies are installed in a virtual environment, also update `ExecStart=` to that environment's Python executable, while retaining `-m src`.
+
 ## Configuration
 API keys and other user configurations are stored in `~/booklet_config.json`. It shoud look like this:
     <!-- "spotify_refresh_token": "...",

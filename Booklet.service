@@ -1,0 +1,15 @@
+[Unit]
+Description=Booklet Audiobook Player
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Booklet
+ExecStart=/usr/bin/python3 -m src
+Environment=PYTHONUNBUFFERED=1
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=append:%h/booklet-errors.log
+
+[Install]
+WantedBy=default.target

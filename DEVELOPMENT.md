@@ -13,6 +13,8 @@ The application has four main layers:
 
 `python -m src` runs `src/__main__.py`.
 
+On the Raspberry Pi, `Booklet.service` can install this command as an automatically restarting per-user systemd service. The unit expects the repository directly in the user's home directory and appends stderr to `~/booklet-errors.log`; installation commands are documented in `README.md`.
+
 Startup performs the following work:
 
 1. Selects `SimulatedScreen` on the development machine or `Screen` on the Raspberry Pi.

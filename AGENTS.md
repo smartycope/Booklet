@@ -9,6 +9,7 @@ Preserve the existing async page-routing architecture and the hardware/simulated
 ## Runtime and Configuration
 
 - Run the application with `python -m src`.
+- `Booklet.service` is the deployable per-user systemd unit. It assumes the repository root is `%h`, runs `/usr/bin/python3 -m src`, restarts automatically, and appends stderr to `%h/booklet-errors.log`.
 - Python dependencies are in `requirements.txt`; development dependencies are in `dev-requirements.txt`.
 - `python-vlc` is only the Python binding. The target system must also have VLC/libVLC installed.
 - Read-only deployment configuration comes from `~/booklet_config.json` on the Pi and the repository copy in debug mode. Existing keys include:

@@ -1,5 +1,6 @@
 import asyncio
 import aiohttp
+import logging
 from src.GuiManager import GuiManager
 from src.AudiobookshelfApiManager import AudiobookshelfApiManager
 from src.AudioPlayer import AudioPlayer
@@ -57,6 +58,7 @@ async def main():
         try:
             await manager.run()
         except Exception as err:
+            logging.exception("Booklet stopped because of an unhandled error")
             manager.current_page = ErrorPage(err)
         finally:
             await manager.shutdown()
