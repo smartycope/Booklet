@@ -6,9 +6,11 @@ import zipfile
 
 import pytest
 
+from src import font
 from src.AudiobookModels import Book, Track
 from src.DownloadStore import DownloadStore
 from src.pages.DownloadBookPage import DownloadBookPage
+from src.pages.Page import Page
 
 
 class ZipApi:
@@ -75,3 +77,54 @@ def test_download_estimate_uses_observed_transfer_speed():
     )
     assert DownloadBookPage._estimated_seconds_remaining(page) == 3
     assert DownloadBookPage._format_duration(3665) == "1h 1m"
+
+
+def test_available_bytes_uses_nearest_existing_download_parent(tmp_path, monkeypatch):
+    requested = []
+
+    def disk_usage(path):
+        requested.append(path)
+        return SimpleNamespace(free=123456)
+
+    monkeypatch.setattr("src.DownloadStore.shutil.disk_usage", disk_usage)
+    store = DownloadStore(tmp_path / "not-created" / "Audiobooks")
+    assert store.available_bytes() == 123456
+    assert requested == [tmp_path]
+
+
+def test_download_page_does_not_start_when_book_will_not_fit():
+    class Api:
+        async def get_book(self, _book_id):
+            return Book(id="large", title="Large Book", size=2 * 1024**3)
+
+    class Store:
+        def contains(self, _book_id):
+            return False
+
+        def available_bytes(self):
+            return 512 * 1024**2
+
+        async def download(self, *_args, **_kwargs):
+            raise AssertionError("download must not start")
+
+    renders = []
+    manager = SimpleNamespace(
+        api=Api(),
+        small_font=font(11),
+        current_page=None,
+        render=lambda: renders.append(True),
+    )
+    Page.manager = manager
+    page = asyncio.run(DownloadBookPage("large"))
+    manager.current_page = page
+    page.store = Store()
+
+    asyncio.run(page.on_enter())
+
+    assert page.insufficient_space is True
+    assert page.active is False
+    assert page._task is None
+    assert page._insufficient_space_status() == (
+        "Not enough space\nBook: 2.0 GB\nAvailable: 512.0 MB\nLeft to return"
+    )
+    assert renders == [True]

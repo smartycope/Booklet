@@ -23,12 +23,14 @@ class SettingsPage(ListPage):
         CONFIG.setdefault("screensaver_timeout", 30)
         await super().__init__(
             items=[
+                ("Bluetooth", "Bluetooth"),
                 ("Brightness", "brightness"),
                 ("Volume", "volume"),
                 ("Default playback speed", "default_playback_speed"),
                 ("Screensaver timeout", "screensaver_timeout"),
                 ("Check for updates", "check_for_updates"),
-                ("Bluetooth", "Bluetooth"),
+                ("Reboot", "reboot"),
+                ("Low power mode (press left to wake)", "low_power_mode"),
                 ("Back", "Landing"),
             ],
             scrollable=False,
@@ -155,6 +157,75 @@ class SettingsPage(ListPage):
         self._draw_items()
         return True
 
+    async def check_for_updates(self):
+            self.update_status = "Checking for updates…"
+            self._draw_items()
+            self.manager.render()
+            try:
+                process = await asyncio.create_subprocess_exec(
+                    "git", "pull",
+                    cwd=Path.cwd(),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.STDOUT,
+                )
+                output, _unused = await process.communicate()
+                lines = [line.strip() for line in output.decode(errors="replace").splitlines() if line.strip()]
+                if process.returncode == 0:
+                    self.update_status = lines[-1] if lines else "Update complete"
+                else:
+                    self.update_status = f"Update failed ({process.returncode})"
+            except (OSError, subprocess.SubprocessError) as error:
+                self.update_status = f"Update failed: {error}"
+            self._draw_items()
+            self.manager.render()
+            return True
+
+    async def reboot(self):
+        self.update_status = "Rebooting…"
+        self._draw_items()
+        self.manager.render()
+        try:
+            process = await asyncio.create_subprocess_exec(
+                "reboot",
+                cwd=Path.cwd(),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            output, _unused = await process.communicate()
+            lines = [line.strip() for line in output.decode(errors="replace").splitlines() if line.strip()]
+            if process.returncode != 0:
+                self.update_status = f"Failed to reboot ({process.returncode})"
+        except (OSError, subprocess.SubprocessError) as error:
+            self.update_status = f"Reboot failed: {error}"
+        self._draw_items()
+        self.manager.render()
+        # Do we need to manually exit here?
+        # await self.manager.shutdown()
+        return True
+
+    async def low_power_mode(self):
+        self.update_status = "Shutting Down…"
+        self._draw_items()
+        self.manager.render()
+        try:
+            process = await asyncio.create_subprocess_exec(
+                "halt",
+                cwd=Path.cwd(),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            output, _unused = await process.communicate()
+            lines = [line.strip() for line in output.decode(errors="replace").splitlines() if line.strip()]
+            if process.returncode != 0:
+                self.update_status = f"Failed to halt ({process.returncode})"
+        except (OSError, subprocess.SubprocessError) as error:
+            self.update_status = f"Halt failed: {error}"
+        self._draw_items()
+        self.manager.render()
+        # Do we need to manually exit here?
+        # await self.manager.shutdown()
+        return True
+
     async def left_pressed(self):
         return self._change_setting(-1)
 
@@ -164,31 +235,12 @@ class SettingsPage(ListPage):
     async def center_pressed(self):
         if self.selected_value == "check_for_updates":
             return await self.check_for_updates()
+        if self.selected_value == "reboot":
+            return await self.reboot()
+        if self.selected_value == "low_power_mode":
+            return await self.low_power_mode()
         if self.selected_value in {"Bluetooth", "Landing"}:
             return self.selected_value
-
-    async def check_for_updates(self):
-        self.update_status = "Checking for updates…"
-        self._draw_items()
-        self.manager.render()
-        try:
-            process = await asyncio.create_subprocess_exec(
-                "git", "pull",
-                cwd=Path.cwd(),
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.STDOUT,
-            )
-            output, _unused = await process.communicate()
-            lines = [line.strip() for line in output.decode(errors="replace").splitlines() if line.strip()]
-            if process.returncode == 0:
-                self.update_status = lines[-1] if lines else "Update complete"
-            else:
-                self.update_status = f"Update failed ({process.returncode})"
-        except (OSError, subprocess.SubprocessError) as error:
-            self.update_status = f"Update failed: {error}"
-        self._draw_items()
-        self.manager.render()
-        return True
 
     async def key2_pressed(self):
         return "Landing"

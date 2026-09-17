@@ -12,30 +12,14 @@ from src import DEBUG
 from src.pages.LandingPage import LandingPage
 
 
-
-# async def main():
-#     async with aiohttp.ClientSession() as session:
-#         api = AudiobookshelfApiManager(session)
-
-#     manager.goto_page("landing")
-#     manager.run()
-
-
-# if __name__ == "__main__":
-#     asyncio.run(main())
-
-# PAGES = {
-#     "landing": LandingPage(),
-
-#     "audiobookshelf landing": AudiobookshelfLandingPage(),
-#     "audiobookshelf local": LocalBooksPage(),
-#     "audiobookshelf download": SelectBookPage(),
-
-#     "settings": SettingsPage(),
-#     "brightness": BrightnessPage(),
-#     "volume": VolumePage(),
-#     "bluetooth": BluetoothPage(),
-# }
+async def connect_audiobookshelf(session):
+    try:
+        return await AudiobookshelfApiManager.create(session)
+    except Exception:
+        logging.exception(
+            "Could not connect to Audiobookshelf; continuing in offline mode"
+        )
+        return None
 
 
 async def main():
@@ -48,13 +32,10 @@ async def main():
 
     connector = aiohttp.TCPConnector(limit=4)
     async with aiohttp.ClientSession(connector=connector) as session:
-        api = await AudiobookshelfApiManager.create(session)
+        api = await connect_audiobookshelf(session)
 
         manager = GuiManager(player, api, screen, await LandingPage())
-        # manager.goto_page("landing")
 
-        # gui.run() blocks, so don't run it directly on the asyncio thread.
-        # await asyncio.to_thread(manager.run)
         try:
             await manager.run()
         except Exception as err:

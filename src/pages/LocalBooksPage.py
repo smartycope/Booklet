@@ -14,16 +14,24 @@ class SelectDownloadedBookPage(ListPage):
         items = []
         for book in books:
             if delete:
+                size = self.store.format_size(book.size) if book.size else "size unavailable"
                 destination = (
                     "DeleteDownloadedBook",
-                    {"book_id": book.id, "title": book.title, "back_route": route},
+                    {
+                        "book_id": book.id,
+                        "title": book.title,
+                        "size": book.size,
+                        "back_route": route,
+                    },
                 )
+                label = f"{book.title} ({size})"
             else:
                 destination = (
                     "Player",
                     {"book_id": book.id, "local": True, "back_route": route},
                 )
-            items.append((book.title, destination))
+                label = book.title
+            items.append((label, destination))
         await super().__init__(
             items=items,
             scrollable=True,
@@ -49,12 +57,23 @@ class LocalBooksPage(SelectDownloadedBookPage):
 
 
 class DeleteDownloadedBookPage(StaticTextPage, aobject):
-    async def __init__(self, book_id: str, title: str, back_route="AudiobookshelfLanding"):
+    async def __init__(
+        self,
+        book_id: str,
+        title: str,
+        size: int = 0,
+        back_route="AudiobookshelfLanding",
+    ):
         self.book_id = book_id
         self.title = title
         self.back_route = back_route
         self.deleted = False
-        StaticTextPage.__init__(self, f"Delete {title}?\n\nHold center to confirm\nLeft to cancel", text_size=14)
+        size_text = DownloadStore.format_size(size) if size else "Unavailable"
+        StaticTextPage.__init__(
+            self,
+            f"Delete {title}?\nSize: {size_text}\n\nHold center to confirm\nLeft to cancel",
+            text_size=14,
+        )
 
     async def center_held(self):
         if not self.deleted:

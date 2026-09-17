@@ -61,12 +61,18 @@ def test_settings_adjust_inline_and_offer_two_back_controls():
     CONFIG["default_playback_speed"] = 1.0
     page = asyncio.run(SettingsPage())
 
-    page._select_index(1)
+    page._select_index(next(
+        index for index, (_label, value) in enumerate(page.entries)
+        if value == "volume"
+    ))
     assert asyncio.run(page.right_pressed()) is True
     assert CONFIG["volume"] == 0.6
     assert manager.player.volume == 0.6
 
-    page._select_index(2)
+    page._select_index(next(
+        index for index, (_label, value) in enumerate(page.entries)
+        if value == "default_playback_speed"
+    ))
     asyncio.run(page.right_pressed())
     assert CONFIG["default_playback_speed"] == 1.1
     assert asyncio.run(page.key2_pressed()) == "Landing"

@@ -39,7 +39,7 @@ from src.pages.PlayerPage import PlayerPage
 
 class GuiManager:
     """ Manage the connection between the screen and the pages. Handles events, and switches between pages. """
-    def __init__(self, player:AudioPlayer, api:AudiobookshelfApiManager, screen:BaseScreen, first_page:Page):
+    def __init__(self, player:AudioPlayer, api:AudiobookshelfApiManager | None, screen:BaseScreen, first_page:Page):
         self.player = player
         self.api = api
         self.screen = screen
@@ -277,12 +277,16 @@ class GuiManager:
         if local:
             book = DownloadStore().load(book_id)
             fallback = CONFIG.get("local_positions", {}).get(book_id, 0)
-            try:
-                start_time = await self.api.get_media_progress(book_id)
-            except Exception:
-                start_time = fallback
+            start_time = fallback
+            if self.api is not None:
+                try:
+                    start_time = await self.api.get_media_progress(book_id)
+                except Exception:
+                    start_time = fallback
             context = PlaybackContext(book=book, local=True, back_route=back_route)
         else:
+            if self.api is None:
+                raise RuntimeError("Audiobookshelf is unavailable while offline")
             session = await self.api.start_playback(book_id)
             book = session.book
             start_time = session.current_time
@@ -335,6 +339,8 @@ class GuiManager:
             positions[context.book.id] = position
             CONFIG["local_positions"] = positions
             CONFIG.sync()
+        if self.api is None:
+            return
         try:
             if context.local:
                 await self.api.update_media_progress(
@@ -380,6 +386,7 @@ class GuiManager:
         await self.screen.listen()
 
     async def shutdown(self):
+        CONFIG.sync()
         if self._inactivity_task and not self._inactivity_task.done():
             self._inactivity_task.cancel()
         page = self.current_page

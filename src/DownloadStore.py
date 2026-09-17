@@ -29,6 +29,24 @@ class DownloadStore:
     def contains(self, book_id: str) -> bool:
         return (self.book_dir(book_id) / self.manifest_name).is_file()
 
+    def available_bytes(self) -> int:
+        """Return free bytes on the filesystem that will contain downloads."""
+        location = self.root
+        while not location.exists() and location != location.parent:
+            location = location.parent
+        return shutil.disk_usage(location).free
+
+    @staticmethod
+    def format_size(size: int) -> str:
+        value = float(size)
+        units = ("bytes", "KB", "MB", "GB", "TB")
+        for unit in units:
+            if value < 1024 or unit == units[-1]:
+                if unit == "bytes":
+                    return f"{int(value)} {unit}"
+                return f"{value:.1f} {unit}"
+            value /= 1024
+
     def load(self, book_id: str) -> Book:
         directory = self.book_dir(book_id)
         data = json.loads((directory / self.manifest_name).read_text())

@@ -1,7 +1,9 @@
 import asyncio
 
 import src.GuiManager as gui_module
+from src import CONFIG
 from src.AudiobookModels import Book, Series
+from src.pages.AudiobookshelfLandingPage import AudiobookshelfLandingPage
 from src.pages.CloudBooksPages import (
     ChooseByAuthorPage, ChooseAuthorsBooksPage, SelectAllBooksPage,
     SelectCloudBookPage, SelectInProgressBookPage,
@@ -114,3 +116,35 @@ def test_all_audiobook_routes_are_registered():
         "DownloadBook", "Player",
     }
     assert all(hasattr(gui_module, f"{route}Page") for route in routes)
+
+
+def test_storage_size_is_human_readable():
+    assert AudiobookshelfLandingPage._format_storage(5 * 1024**3) == "5.0 GB"
+
+
+def test_audiobookshelf_landing_shows_online_status_and_cloud_options():
+    Page.manager = FakeManager()
+    page = asyncio.run(AudiobookshelfLandingPage())
+
+    assert page.title == "Audiobookshelf (Online)"
+    assert "Download a Book" in page.items
+    assert "Stream a Book" in page.items
+
+
+def test_audiobookshelf_landing_offline_only_offers_local_actions():
+    manager = FakeManager()
+    manager.api = None
+    Page.manager = manager
+    CONFIG["current_book"] = {
+        "book_id": "streamed",
+        "title": "Streamed Book",
+        "local": False,
+    }
+    page = asyncio.run(AudiobookshelfLandingPage())
+
+    assert page.title == "Audiobookshelf (Offline)"
+    assert "Resume Streamed Book" not in page.items
+    assert "Download a Book" not in page.items
+    assert "Stream a Book" not in page.items
+    assert "Play Downloaded Book" in page.items
+    assert "Delete Downloaded Book" in page.items

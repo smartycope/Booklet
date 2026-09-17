@@ -2,6 +2,7 @@ import asyncio
 
 from src import CONFIG
 from src.AudiobookModels import Book, PlaybackSession, Track
+import src.GuiManager as gui_module
 from src.GuiManager import GuiManager
 
 
@@ -76,3 +77,41 @@ def test_persist_playback_speed_is_keyed_by_book():
     CONFIG["playback_speeds"] = {"other": 1.1}
     gui.persist_playback_speed("book", 1.6)
     assert CONFIG["playback_speeds"] == {"other": 1.1, "book": 1.6}
+
+
+def test_downloaded_book_plays_offline_from_local_position(monkeypatch):
+    gui = manager()
+    gui.api = None
+    book = Book(
+        id="local",
+        title="Downloaded Book",
+        duration=60,
+        tracks=[Track("audio", "/tmp/audio.mp3", 60)],
+    )
+    monkeypatch.setattr(gui_module, "DownloadStore", lambda: type(
+        "Store", (), {"load": lambda self, _book_id: book}
+    )())
+    CONFIG["local_positions"] = {"local": 23}
+
+    asyncio.run(gui.activate_book("local", True, "Previous"))
+
+    assert gui.player.loaded[2] == 23
+    assert gui.active_playback.local is True
+
+
+def test_offline_local_sync_still_persists_position():
+    gui = manager()
+    gui.api = None
+    gui.active_playback = type("Context", (), {
+        "book": Book(id="local", title="Downloaded Book", duration=60),
+        "local": True,
+        "session_id": None,
+        "was_playing": False,
+        "pending_listened": 0.0,
+        "last_sync_at": 0.0,
+    })()
+    gui.player.position = 17
+
+    asyncio.run(gui.sync_active_playback())
+
+    assert CONFIG["local_positions"]["local"] == 17

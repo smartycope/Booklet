@@ -20,6 +20,8 @@ class DownloadBookPage(Page, aobject):
         self.error = None
         self.downloaded = 0
         self.total = self.book.size or None
+        self.available = None
+        self.insufficient_space = False
         self._task = None
         self._progress_samples = deque(maxlen=20)
         self._draw()
@@ -28,6 +30,15 @@ class DownloadBookPage(Page, aobject):
         if self.store.contains(self.book_id):
             self.complete = True
             self._draw("Already downloaded")
+            self.manager.render()
+            return
+        try:
+            self.available = self.store.available_bytes()
+        except OSError:
+            self.available = None
+        if self.total and self.available is not None and self.total > self.available:
+            self.insufficient_space = True
+            self._draw()
             self.manager.render()
             return
         self.active = True
@@ -60,14 +71,7 @@ class DownloadBookPage(Page, aobject):
 
     @staticmethod
     def _format_size(size: int) -> str:
-        value = float(size)
-        units = ("bytes", "KB", "MB", "GB", "TB")
-        for unit in units:
-            if value < 1024 or unit == units[-1]:
-                if unit == "bytes":
-                    return f"{int(value)} {unit}"
-                return f"{value:.1f} {unit}"
-            value /= 1024
+        return DownloadStore.format_size(size)
 
     @staticmethod
     def _format_duration(seconds: float) -> str:
@@ -92,6 +96,14 @@ class DownloadBookPage(Page, aobject):
         bytes_per_second = transferred / elapsed
         return max(0.0, self.total - self.downloaded) / bytes_per_second
 
+    def _insufficient_space_status(self) -> str:
+        return (
+            "Not enough space\n"
+            f"Book: {self._format_size(self.total)}\n"
+            f"Available: {self._format_size(self.available)}\n"
+            "Left to return"
+        )
+
     def _draw(self, status=None):
         self.reset_img()
         title = "Downloading"
@@ -105,7 +117,9 @@ class DownloadBookPage(Page, aobject):
             book_title += "…"
         self.text(book_title, 4, 38)
 
-        if self.error:
+        if self.insufficient_space:
+            status = self._insufficient_space_status()
+        elif self.error:
             status = f"Failed: {self.error}"
         elif self.complete:
             status = status or "Download complete\nLeft to return"
@@ -124,15 +138,16 @@ class DownloadBookPage(Page, aobject):
         else:
             status = status or f"{self._format_size(self.downloaded)}\nHold center to cancel"
 
-        if self.total:
+        if self.total and not self.insufficient_space:
             bar = (10, 96, self.width - 10, 123)
             self.draw.rounded_rectangle(bar, outline=THEME["text_color"], width=2, radius=THEME["radius"])
             fraction = min(1.0, self.downloaded / self.total)
             fill_right = 13 + round((self.width - 26) * fraction)
             if fill_right > 13:
                 self.draw.rectangle((13, 99, fill_right, 120), fill=THEME["text_color"])
+        status_y = 96 if self.insufficient_space else 137
         for index, line in enumerate(str(status).split("\n")):
-            self.text(line, 5, 137 + index * 24, font=self.manager.small_font)
+            self.text(line, 5, status_y + index * 24, font=self.manager.small_font)
 
     async def left_pressed(self):
         if not self.active:
