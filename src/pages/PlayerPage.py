@@ -2,12 +2,15 @@ import subprocess
 
 from src.aobject import aobject
 from src.pages.Page import Page
+from aioaudiobookshelf.schema.library import LibraryItemMinifiedBook, LibraryItemExpandedBook
+
+type Book = LibraryItemMinifiedBook | LibraryItemExpandedBook
 
 class PlayerPage(Page, aobject):
     # id: str
 
-    async def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    async def __init__(self, play:Book|None=None):
+        super().__init__()
 
     # TODO: should this add a bookmark instead?
     async def center_held(self):

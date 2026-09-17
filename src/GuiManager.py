@@ -12,6 +12,7 @@ from src.pages.AudiobookshelfLandingPage import AudiobookshelfLandingPage
 from src.pages.BluetoothLandingPage import BluetoothLandingPage
 from src.pages.LandingPage import LandingPage
 from src.pages.LocalBooksPage import LocalBooksPage
+from src.pages.SelectInProgressBookPage import SelectInProgressBookPage
 from src.pages.SelectBookPage import SelectBookPage
 from src.pages.SettingsPage import SettingsPage
 from src.pages.StaticTextPage import StaticTextPage

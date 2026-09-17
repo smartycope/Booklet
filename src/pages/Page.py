@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from PIL import Image, ImageDraw
 from src import WIDTH, HEIGHT, THEME
@@ -7,7 +9,7 @@ from src.aobject import aobject
 class Page(ABC):
     width = WIDTH
     height = HEIGHT
-    manager: 'GuiManager'
+    manager: GuiManager
 
     def __init__(self):
         self.img = self.first_image()

@@ -1,5 +1,6 @@
 from src.pages.ListPage import ListPage
 
+# TODO: I'm probably gonna delete this
 class SelectBookPage(ListPage):
     async def __init__(self, title='Select Book', prev_page:str='AudiobookshelfLanding'):
         await super().__init__(
@@ -11,7 +12,7 @@ class SelectBookPage(ListPage):
         self.prev_page = prev_page
 
     def fetch_books(self):
-        return ['test', 'books', 'hello', 'world']
+        return
 
     async def left_pressed(self):
         return self.prev_page

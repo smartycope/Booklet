@@ -5,6 +5,7 @@ from src.pages.Page import Page
 from src.aobject import aobject
 from src import font
 
+# TODO: if the text of a single item is longer than the screen width, marquee it
 
 class ListPage(Page, aobject):
     async def __init__(self, items: list[str] | dict[str, Any], scrollable, title='', vspacing=6, text_size=THEME["text_size"]):
