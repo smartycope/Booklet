@@ -1,0 +1,59 @@
+import asyncio
+import inspect
+from pathlib import Path
+import zipfile
+
+import pytest
+
+from src.AudiobookModels import Book, Track
+from src.DownloadStore import DownloadStore
+
+
+class ZipApi:
+    def __init__(self, unsafe=False):
+        self.unsafe = unsafe
+
+    async def download_book(self, _book_id, destination, progress):
+        with zipfile.ZipFile(destination, "w") as archive:
+            archive.writestr("../escape.mp3" if self.unsafe else "disc/02.mp3", b"two")
+            if not self.unsafe:
+                archive.writestr("disc/01.mp3", b"one")
+        if progress:
+            result = progress(destination.stat().st_size, destination.stat().st_size)
+            if inspect.isawaitable(result):
+                await result
+        return "book.zip", "application/zip"
+
+
+def test_download_is_atomic_and_manifest_tracks_server_order(tmp_path):
+    store = DownloadStore(tmp_path)
+    book = Book(
+        id="book-id", title="Book", duration=20,
+        tracks=[Track("01.mp3", "", 10, 0), Track("02.mp3", "", 10, 10)],
+    )
+    updates = []
+    downloaded = asyncio.run(store.download(ZipApi(), book, lambda current, total: updates.append((current, total))))
+    assert downloaded.title == "Book"
+    assert [Path(track.source).name for track in downloaded.tracks] == ["01.mp3", "02.mp3"]
+    assert store.contains("book-id")
+    assert updates[-1][0] == updates[-1][1]
+    assert not list(tmp_path.glob(".book-id-*"))
+
+
+def test_download_rejects_zip_path_traversal_and_cleans_partial_files(tmp_path):
+    store = DownloadStore(tmp_path)
+    with pytest.raises(RuntimeError, match="Unsafe path"):
+        asyncio.run(store.download(ZipApi(unsafe=True), Book(id="book-id", title="Book")))
+    assert not store.book_dir("book-id").exists()
+    assert not (tmp_path.parent / "escape.mp3").exists()
+
+
+def test_delete_only_removes_requested_book(tmp_path):
+    store = DownloadStore(tmp_path)
+    first = store.book_dir("first")
+    second = store.book_dir("second")
+    first.mkdir(parents=True)
+    second.mkdir()
+    store.delete("first")
+    assert not first.exists()
+    assert second.exists()

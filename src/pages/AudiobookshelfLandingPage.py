@@ -1,23 +1,30 @@
 from src import CONFIG
 from src.pages.ListPage import ListPage
-from collections import OrderedDict
 
 class AudiobookshelfLandingPage(ListPage):
     async def __init__(self):
-        items = OrderedDict({
-            'Play local book': 'LocalBooks',
-            # 'Download book': 'CloudBooks',
-            'Download an In Progress Book': 'SelectInProgressBook',
-        })
-
-        if book := CONFIG.get('last_played_book'):
-            items[f'Resume {book.media.metadata.title}'] = ('Player', {'play': book})
-            items.move_to_end('Resume last book', last=False)
-
+        items = []
+        current = CONFIG.get("current_book")
+        if current:
+            items.append((
+                f"Resume {current['title']}",
+                ("Player", {
+                    "book_id": current["book_id"],
+                    "local": current.get("local", False),
+                    "back_route": "AudiobookshelfLanding",
+                }),
+            ))
+        items.extend([
+            ("Download a Book", ("SelectCloudBook", {"download": True})),
+            ("Stream a Book", ("SelectCloudBook", {"download": False})),
+            ("Play Downloaded Book", ("SelectDownloadedBook", {"delete": False})),
+            ("Delete Downloaded Book", ("SelectDownloadedBook", {"delete": True})),
+        ])
         await super().__init__(
             items=items,
-            scrollable=False,
+            scrollable=True,
             title="Audiobookshelf",
+            text_size=13,
         )
 
     def item_selected(self, item):

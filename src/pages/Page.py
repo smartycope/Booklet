@@ -35,6 +35,12 @@ class Page(ABC):
         self.img = self.first_image()
         self.draw = ImageDraw.Draw(self.img)
 
+    async def on_enter(self):
+        """Called after this page becomes visible."""
+
+    async def on_exit(self):
+        """Called before navigation replaces this page."""
+
     async def up_pressed(self): pass
     async def down_pressed(self): pass
     async def left_pressed(self): pass

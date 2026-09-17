@@ -21,6 +21,7 @@ TODO: Add a battery
 ## Commands
 * Install requirements:
     * `pip install -r requirements.txt`
+    * Install VLC/libVLC through the operating system as well (for Raspberry Pi OS: `sudo apt install vlc`).
 * Install dev requirements:
     * `pip install -r dev-requirements.txt`
 * Run program:
@@ -34,9 +35,13 @@ API keys and other user configurations are stored in `~/booklet_config.json`. It
 ```JSON
 {
     "audiobookshelf_url": "...",
-    "audiobookshelf_api_key": "..."
+    "audiobookshelf_api_key": "...",
+    "audiobookshelf_library_name": "Audiobooks",
+    "download_directory": "~/Audiobooks"
 }
 ```
+
+`download_directory` is optional and defaults to `~/Audiobooks`. The Audiobookshelf user associated with the API key must have download permission to save books locally.
 <!--
 I had the keys left over from a different project. I honestly forgot exactly how I got them. Some of them came from the [spotify web api docs](https://developer.spotify.com/documentation/web-api/tutorials/getting-started) somewhere, and the rest came from a streamlit application I made for the purpose.
 TODO: include that streamlit application -->

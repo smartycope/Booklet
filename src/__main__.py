@@ -58,6 +58,8 @@ async def main():
             await manager.run()
         except Exception as err:
             manager.current_page = ErrorPage(err)
+        finally:
+            await manager.shutdown()
 
 
 if __name__ == "__main__":

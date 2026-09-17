@@ -5,7 +5,7 @@ from src.pages.ListPage import ListPage
 _bluetooth = BluetoothManager()
 
 
-class BluetoothLandingPage(ListPage):
+class BluetoothPage(ListPage):
     async def __init__(self, bluetooth=None):
         self.bluetooth = bluetooth or _bluetooth
         self.show_discovered = False
@@ -57,7 +57,8 @@ class BluetoothLandingPage(ListPage):
     async def _refresh(self):
         selected_item = self.selected_item
         self.item_map = await self._items()
-        self.items = list(self.item_map)
+        self.entries = list(self.item_map.items())
+        self.items = [label for label, _value in self.entries]
         self.selected_index = (
             self.items.index(selected_item) if selected_item in self.items else 0
         )
@@ -88,7 +89,9 @@ class BluetoothLandingPage(ListPage):
         return True
 
     async def center_pressed(self):
-        return await self.item_selected(self.item_map[self.selected_item])
+        if not self.items:
+            return None
+        return await self.item_selected(self.selected_value)
 
     async def right_pressed(self):
         return 'Settings'
