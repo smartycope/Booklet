@@ -1,3 +1,7 @@
+import asyncio
+from pathlib import Path
+import subprocess
+
 from PIL import Image, ImageDraw
 
 from src import CONFIG, THEME
@@ -8,10 +12,11 @@ class SettingsPage(ListPage):
     speed_min = 0.5
     speed_max = 4.0
     timeout_options = (10, 30, 60, 120, 300, 600)
-    bar_dark = "#3D2C24"
-    bar_light = "#FFEFD7"
+    bar_dark = THEME["text_color"]
+    bar_light = THEME["bg"]
 
     async def __init__(self):
+        self.update_status = ""
         CONFIG.setdefault("volume", 1.0)
         CONFIG.setdefault("brightness", 1.0)
         CONFIG.setdefault("default_playback_speed", 1.0)
@@ -22,6 +27,7 @@ class SettingsPage(ListPage):
                 ("Volume", "volume"),
                 ("Default playback speed", "default_playback_speed"),
                 ("Screensaver timeout", "screensaver_timeout"),
+                ("Check for updates", "check_for_updates"),
                 ("Bluetooth", "Bluetooth"),
                 ("Back", "Landing"),
             ],
@@ -112,6 +118,14 @@ class SettingsPage(ListPage):
                     self.draw.line((split, bottom, self.width - 2, bottom), fill=self.bar_dark, width=2)
                     self.draw.line((self.width - 2, top, self.width - 2, bottom), fill=self.bar_dark, width=2)
 
+        if self.update_status:
+            status = self.update_status
+            while status and self.draw.textlength(status + "…", font=self.manager.small_font) > self.width - 8:
+                status = status[:-1]
+            if status != self.update_status:
+                status += "…"
+            self.text(status, 4, self.height - 18, font=self.manager.small_font)
+
     def _change_setting(self, direction):
         key = self.selected_value
         if key == "brightness":
@@ -148,8 +162,33 @@ class SettingsPage(ListPage):
         return self._change_setting(1)
 
     async def center_pressed(self):
+        if self.selected_value == "check_for_updates":
+            return await self.check_for_updates()
         if self.selected_value in {"Bluetooth", "Landing"}:
             return self.selected_value
+
+    async def check_for_updates(self):
+        self.update_status = "Checking for updates…"
+        self._draw_items()
+        self.manager.render()
+        try:
+            process = await asyncio.create_subprocess_exec(
+                "git", "pull",
+                cwd=Path.cwd(),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            output, _unused = await process.communicate()
+            lines = [line.strip() for line in output.decode(errors="replace").splitlines() if line.strip()]
+            if process.returncode == 0:
+                self.update_status = lines[-1] if lines else "Update complete"
+            else:
+                self.update_status = f"Update failed ({process.returncode})"
+        except (OSError, subprocess.SubprocessError) as error:
+            self.update_status = f"Update failed: {error}"
+        self._draw_items()
+        self.manager.render()
+        return True
 
     async def key2_pressed(self):
         return "Landing"

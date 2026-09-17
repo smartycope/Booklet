@@ -54,7 +54,7 @@ class DeleteDownloadedBookPage(StaticTextPage, aobject):
         self.title = title
         self.back_route = back_route
         self.deleted = False
-        StaticTextPage.__init__(self, f"Delete {title}?\n\nHold center to confirm.\nLeft to cancel.", text_size=14)
+        StaticTextPage.__init__(self, f"Delete {title}?\n\nHold center to confirm\nLeft to cancel", text_size=14)
 
     async def center_held(self):
         if not self.deleted:
@@ -67,7 +67,7 @@ class DeleteDownloadedBookPage(StaticTextPage, aobject):
                 del CONFIG["current_book"]
                 CONFIG.sync()
             self.deleted = True
-            self.content = f"Deleted {self.title}."
+            self.content = f"Deleted {self.title}.\n\nPress left to go back"
             self.lines = self._wrap_text(self.content)
             self.scroll_offset = 0
             self._draw_text()

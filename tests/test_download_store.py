@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 from pathlib import Path
+from types import SimpleNamespace
 import zipfile
 
 import pytest
@@ -64,3 +65,13 @@ def test_download_size_uses_binary_human_readable_units():
     assert DownloadBookPage._format_size(512) == "512 bytes"
     assert DownloadBookPage._format_size(1536) == "1.5 KB"
     assert DownloadBookPage._format_size(2 * 1024 * 1024) == "2.0 MB"
+
+
+def test_download_estimate_uses_observed_transfer_speed():
+    page = SimpleNamespace(
+        total=1000,
+        downloaded=400,
+        _progress_samples=[(10.0, 0), (12.0, 400)],
+    )
+    assert DownloadBookPage._estimated_seconds_remaining(page) == 3
+    assert DownloadBookPage._format_duration(3665) == "1h 1m"

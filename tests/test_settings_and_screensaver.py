@@ -1,6 +1,7 @@
 import asyncio
+from pathlib import Path
 
-from src import CONFIG
+from src import CONFIG, font
 from src.GuiManager import GuiManager
 from src.pages.LoadingPage import LoadingPage
 from src.pages.Page import Page
@@ -46,6 +47,7 @@ def bare_manager(page):
     manager._current_page = page
     manager.screen = FakeScreen()
     manager.player = FakePlayer()
+    manager.small_font = font(11)
     manager._navigation_busy = False
     manager._event_busy = False
     manager._inactivity_task = None
@@ -70,6 +72,30 @@ def test_settings_adjust_inline_and_offer_two_back_controls():
     assert asyncio.run(page.key2_pressed()) == "Landing"
     page._select_index(len(page.items) - 1)
     assert asyncio.run(page.center_pressed()) == "Landing"
+
+
+def test_settings_check_for_updates_runs_git_pull_in_cwd(monkeypatch):
+    calls = []
+
+    class Process:
+        returncode = 0
+
+        async def communicate(self):
+            return b"Already up to date.\n", None
+
+    async def create_process(*args, **kwargs):
+        calls.append((args, kwargs))
+        return Process()
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", create_process)
+    manager = bare_manager(FakePage())
+    Page.manager = manager
+    page = asyncio.run(SettingsPage())
+    page._select_index(page.entries.index(("Check for updates", "check_for_updates")))
+    assert asyncio.run(page.center_pressed()) is True
+    assert calls[0][0] == ("git", "pull")
+    assert calls[0][1]["cwd"].resolve() == Path.cwd().resolve()
+    assert page.update_status == "Already up to date."
 
 
 def test_screensaver_preserves_and_restores_the_exact_page():

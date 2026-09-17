@@ -95,7 +95,6 @@ class GuiManager:
         )
         future.add_done_callback(self._event_finished)
 
-    # @staticmethod
     def _event_finished(self, future):
         if future.cancelled():
             return
@@ -167,15 +166,11 @@ class GuiManager:
         # This is a string and not an instantiated Page because that would be a circular import
         # (Landing -> Settings, but also Settings -> Landing)
         if type(rtn) is str:
-        # if isinstance(rtn, Page):
-            # self.goto_page(rtn)
-            # if isinstance(page, str):
             await self.navigate_route(rtn)
         elif isinstance(rtn, tuple):
             # If the handler returns a tuple of a string and a dictionary, goto that page, and set those
             # attributes on the page class
             if type(rtn[0]) is str and type(rtn[1]) is dict:
-            #     self.goto_page(rtn[0], rtn[1])
                 await self.navigate_route(rtn[0], **rtn[1])
             # If the handler returns a tuple of 4 integers, partial update (should be a tuple of 4 integers)
             # x1, x2, y1, y2

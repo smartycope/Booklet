@@ -119,7 +119,7 @@ Caching rules:
 - Up/down changes selection.
 - Left/right decreases/increases brightness, volume, default playback speed, and screensaver timeout directly on the page.
 - Adjustable rows use a full-width split bar: white text on black for the completed portion and black text on white for the remainder.
-- Center activates the Bluetooth or Back rows. Key 2 also returns to `Landing`.
+- Center activates Check for updates, Bluetooth, or Back. The update action asynchronously runs `git pull` with the current working directory as the repository root. Key 2 also returns to `Landing`.
 - Brightness changes update the screen, volume changes update VLC, and every value is persisted in `CONFIG`.
 - The screensaver timeout is configurable in Settings and defaults to 30 seconds.
 - Waking must not forward the wake event to the restored page.
