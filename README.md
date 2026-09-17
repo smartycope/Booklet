@@ -7,8 +7,6 @@ This is a personal project. It shouldn't be too hard for someone else to make on
 
 Originally, the idea was to be able to stream/download from Spotify as well, but authentication became a hassle after they made refresh tokens expire after 6 months, as well as not being able to download music, and registering as an offical "spotify player", and so on. It's now just targetting audiobookshelf.
 
-Currently, it only supports downloading books and then playing them. Streaming isn't implemented yet.
-
 ## Hardware
 * Raspberry pi 2W (the one with wifi and bluetooth)
 * [240x240, 1.3inch IPS LCD display HAT](https://www.waveshare.com/1.3inch-lcd-hat.htm)
@@ -45,5 +43,14 @@ TODO: include that streamlit application -->
 
 The `audiobookshelf_url` is the URL of your audiobookshelf instance. It's self hosted. You can create an API key by going to `Settings > API Keys` in your audiobookshelf instance (you need to be logged in as the root user).
 
+## TODO
+Not yet in scope, but eventually we'll want to implement:
+* playback-speed control
+* cover-art UI
+* bookmarks
+* search keyboard
+* background downloads?
+* concurrent downloads?
+* podcast support?
 
 Credit to ChatGPT for the icon
