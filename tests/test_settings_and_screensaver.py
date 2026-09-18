@@ -7,6 +7,7 @@ from src.pages.LoadingPage import LoadingPage
 from src.pages.Page import Page
 from src.pages.ScreensaverPage import ScreensaverPage
 from src.pages.SettingsPage import SettingsPage
+from src.pages.StaticTextPage import StaticTextPage
 from src.screens.Screen import Screen
 
 
@@ -91,14 +92,19 @@ def test_settings_check_for_updates_runs_git_pull_in_cwd(monkeypatch):
     calls = []
 
     class Process:
+        def __init__(self, output):
+            self.output = output
+
         returncode = 0
 
         async def communicate(self):
-            return b"Already up to date.\n", None
+            return self.output, None
 
     async def create_process(*args, **kwargs):
         calls.append((args, kwargs))
-        return Process()
+        if args[:2] == ("git", "rev-parse"):
+            return Process(b"same-revision\n")
+        return Process(b"Already up to date.\n")
 
     monkeypatch.setattr(asyncio, "create_subprocess_exec", create_process)
     manager = bare_manager(FakePage())
@@ -106,9 +112,47 @@ def test_settings_check_for_updates_runs_git_pull_in_cwd(monkeypatch):
     page = asyncio.run(SettingsPage())
     page._select_index(page.entries.index(("Check for updates", "check_for_updates")))
     assert asyncio.run(page.center_pressed()) is True
-    assert calls[0][0] == ("git", "pull")
-    assert calls[0][1]["cwd"].resolve() == Path.cwd().resolve()
+    assert calls[1][0] == ("git", "pull")
+    assert calls[1][1]["cwd"].resolve() == Path.cwd().resolve()
     assert page.update_status == "Already up to date."
+
+
+def test_settings_restarts_service_after_an_update(monkeypatch):
+    calls = []
+    revisions = iter((b"old-revision\n", b"new-revision\n"))
+    manager = bare_manager(FakePage())
+
+    class Process:
+        returncode = 0
+
+        def __init__(self, output=b""):
+            self.output = output
+
+        async def communicate(self):
+            return self.output, None
+
+    async def create_process(*args, **kwargs):
+        calls.append((args, kwargs))
+        if args[:2] == ("git", "rev-parse"):
+            return Process(next(revisions))
+        if args[:2] == ("git", "pull"):
+            return Process(b"Updating old..new\n")
+        assert isinstance(manager.current_page, StaticTextPage)
+        assert manager.current_page.content == "Booklet will restart now!"
+        return Process()
+
+    async def no_delay(_seconds):
+        pass
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", create_process)
+    monkeypatch.setattr(asyncio, "sleep", no_delay)
+    Page.manager = manager
+    page = asyncio.run(SettingsPage())
+
+    assert asyncio.run(page.check_for_updates()) is True
+    assert calls[-1][0] == (
+        "systemctl", "--user", "--no-block", "restart", "Booklet.service",
+    )
 
 
 def test_screensaver_preserves_and_restores_the_exact_page():

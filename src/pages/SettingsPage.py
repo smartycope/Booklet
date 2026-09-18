@@ -6,9 +6,11 @@ from PIL import Image, ImageDraw
 
 from src import CONFIG, THEME
 from src.pages.ListPage import ListPage
+from src.pages.StaticTextPage import StaticTextPage
 
 
 class SettingsPage(ListPage):
+    restart_notice_seconds = 2
     speed_min = 0.5
     speed_max = 4.0
     timeout_options = (10, 30, 60, 120, 300, 600)
@@ -162,6 +164,7 @@ class SettingsPage(ListPage):
             self._draw_items()
             self.manager.render()
             try:
+                previous_revision = await self._git_revision()
                 process = await asyncio.create_subprocess_exec(
                     "git", "pull",
                     cwd=Path.cwd(),
@@ -171,7 +174,14 @@ class SettingsPage(ListPage):
                 output, _unused = await process.communicate()
                 lines = [line.strip() for line in output.decode(errors="replace").splitlines() if line.strip()]
                 if process.returncode == 0:
-                    self.update_status = lines[-1] if lines else "Update complete"
+                    current_revision = await self._git_revision()
+                    if (
+                        previous_revision is not None
+                        and current_revision is not None
+                        and current_revision != previous_revision
+                    ):
+                        return await self.restart_after_update()
+                    self.update_status = lines[-1] if lines else "Already up to date."
                 else:
                     self.update_status = f"Update failed ({process.returncode})"
             except (OSError, subprocess.SubprocessError) as error:
@@ -179,6 +189,45 @@ class SettingsPage(ListPage):
             self._draw_items()
             self.manager.render()
             return True
+
+    async def _git_revision(self):
+        process = await asyncio.create_subprocess_exec(
+            "git", "rev-parse", "HEAD",
+            cwd=Path.cwd(),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        output, _unused = await process.communicate()
+        if process.returncode != 0:
+            return None
+        return output.decode(errors="replace").strip() or None
+
+    async def restart_after_update(self):
+        self.manager.current_page = StaticTextPage("Booklet will restart now!")
+        await asyncio.sleep(self.restart_notice_seconds)
+        try:
+            process = await asyncio.create_subprocess_exec(
+                "systemctl", "--user", "--no-block", "restart", "Booklet.service",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            output, _unused = await process.communicate()
+        except (OSError, subprocess.SubprocessError) as error:
+            self.update_status = f"Restart failed: {error}"
+            self.manager.current_page = self
+            return True
+        if process.returncode == 0:
+            return True
+
+        lines = [
+            line.strip()
+            for line in output.decode(errors="replace").splitlines()
+            if line.strip()
+        ]
+        detail = lines[-1] if lines else f"exit code {process.returncode}"
+        self.update_status = f"Restart failed: {detail}"
+        self.manager.current_page = self
+        return True
 
     async def reboot(self):
         self.update_status = "Rebooting…"

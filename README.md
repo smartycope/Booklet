@@ -135,15 +135,7 @@ include that streamlit application -->
 The `audiobookshelf_url` is the URL of your audiobookshelf instance. It's self hosted. You can create an API key by going to `Settings > API Keys` in your audiobookshelf instance (you need to be logged in as the root user).
 
 ## TODO
-*
-* if 530 response code, indicate the server might be down
-* Bluetooth page - needs to be  obvious that if you click on it, it will disconnect it
-* handle br-connection-profile-unavailable error more gracefully (really just still raise an error, just have it say something human readable)
-* Bluetooth page needs some way to forget devices as well as disconnect from them
-* Brightness needs to be a log scale
 * profile stuff
-* freeze dependancies
-
 * Need a wifi connection page -- will need a keyboard for this!
 * better playback acceleration algorithm
 * cover-art UI
