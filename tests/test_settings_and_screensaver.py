@@ -7,6 +7,7 @@ from src.pages.LoadingPage import LoadingPage
 from src.pages.Page import Page
 from src.pages.ScreensaverPage import ScreensaverPage
 from src.pages.SettingsPage import SettingsPage
+from src.screens.Screen import Screen
 
 
 class FakeScreen:
@@ -78,6 +79,12 @@ def test_settings_adjust_inline_and_offer_two_back_controls():
     assert asyncio.run(page.key2_pressed()) == "Landing"
     page._select_index(len(page.items) - 1)
     assert asyncio.run(page.center_pressed()) == "Landing"
+
+
+def test_device_brightness_uses_a_logarithmic_curve():
+    assert Screen._brightness_duty_cycle(0) == 0
+    assert Screen._brightness_duty_cycle(1) == 0.5
+    assert Screen._brightness_duty_cycle(0.5) < 0.25
 
 
 def test_settings_check_for_updates_runs_git_pull_in_cwd(monkeypatch):

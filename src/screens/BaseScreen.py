@@ -60,7 +60,8 @@ class BaseScreen(ABC):
         self._display_awake = True
         backlight = getattr(self, "gpio_bl_pin", None)
         if backlight is not None:
-            backlight.value = self.brightness / 2
+            converter = getattr(self, "_brightness_duty_cycle", lambda value: value / 2)
+            backlight.value = converter(self.brightness)
 
     @abstractmethod
     def close(self): pass

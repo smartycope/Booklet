@@ -60,6 +60,10 @@ python -m venv .
 source bin/activate
 # Install python dependancies
 pip install -r requirements.txt
+# Setup the SPI pins
+sudo raspi-config nonint do_spi 0
+# Reboot
+sudo reboot
 ```
 
 ### Set up the config file
@@ -126,14 +130,21 @@ API keys and other user configurations are stored in `~/booklet_config.json`. It
 `download_directory` is optional and defaults to `~/Audiobooks`. The Audiobookshelf user associated with the API key must have download permission to save books locally.
 <!--
 I had the keys left over from a different project. I honestly forgot exactly how I got them. Some of them came from the [spotify web api docs](https://developer.spotify.com/documentation/web-api/tutorials/getting-started) somewhere, and the rest came from a streamlit application I made for the purpose.
-TODO: include that streamlit application -->
+include that streamlit application -->
 
 The `audiobookshelf_url` is the URL of your audiobookshelf instance. It's self hosted. You can create an API key by going to `Settings > API Keys` in your audiobookshelf instance (you need to be logged in as the root user).
 
 ## TODO
-Not yet in scope, but eventually we'll want to implement:
+*
+* if 530 response code, indicate the server might be down
+* Bluetooth page - needs to be  obvious that if you click on it, it will disconnect it
+* handle br-connection-profile-unavailable error more gracefully (really just still raise an error, just have it say something human readable)
+* Bluetooth page needs some way to forget devices as well as disconnect from them
+* Brightness needs to be a log scale
 * profile stuff
 * freeze dependancies
+
+* Need a wifi connection page -- will need a keyboard for this!
 * better playback acceleration algorithm
 * cover-art UI
 * bookmarks

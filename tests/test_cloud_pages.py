@@ -148,3 +148,18 @@ def test_audiobookshelf_landing_offline_only_offers_local_actions():
     assert "Stream a Book" not in page.items
     assert "Play Downloaded Book" in page.items
     assert "Delete Downloaded Book" in page.items
+    assert "Login failed: check server and API key" in page.items
+
+
+def test_audiobookshelf_landing_explains_530_response():
+    class ResponseError(Exception):
+        status = 530
+
+    manager = FakeManager()
+    manager.api = None
+    manager.api_error = ResponseError()
+    Page.manager = manager
+
+    page = asyncio.run(AudiobookshelfLandingPage())
+
+    assert "Login failed: server may be down (530)" in page.items

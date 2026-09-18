@@ -9,15 +9,23 @@ class BluetoothPage(ListPage):
     async def __init__(self, bluetooth=None):
         self.bluetooth = bluetooth or _bluetooth
         self.show_discovered = False
+        self.action_device = None
         items = await self._items()
         await super().__init__(
             items=items,
             scrollable=True,
-            title="Bluetooth",
+            title="Connected Devices",
             text_size=12,
         )
 
     async def _items(self):
+        if self.action_device is not None:
+            return {
+                "Disconnect": ("disconnect", self.action_device),
+                "Forget": ("forget", self.action_device),
+                "Back": ("back", None),
+            }
+
         if not await self.bluetooth.adapter_powered():
             return {"Turn Bluetooth on": ("power_on", None)}
 
@@ -29,17 +37,13 @@ class BluetoothPage(ListPage):
                 continue
 
             if device.connected:
-                verb = "Disconnect"
-                action = "disconnect"
+                action = "device_actions"
             elif device.paired:
-                verb = "Connect"
                 action = "connect"
             else:
-                verb = "Pair"
                 action = "pair"
 
             label = f"{device.name}"
-            self.title = f'Bluetooth - {verb}'
             if label in used_labels:
                 label = f"{label} ({device.address[-5:]})"
             used_labels.add(label)
@@ -62,7 +66,11 @@ class BluetoothPage(ListPage):
         self.selected_index = (
             self.items.index(selected_item) if selected_item in self.items else 0
         )
-        self.title = "Bluetooth"
+        self.title = (
+            self.action_device.name
+            if self.action_device is not None
+            else "Connected Devices"
+        )
         self._draw_items()
 
     async def item_selected(self, item):
@@ -81,9 +89,18 @@ class BluetoothPage(ListPage):
         elif action == "connect":
             self._show_status("Connecting...")
             await self.bluetooth.connect(device)
+        elif action == "device_actions":
+            self.action_device = device
+        elif action == "back":
+            self.action_device = None
         elif action == "disconnect":
             self._show_status("Disconnecting...")
             await self.bluetooth.disconnect(device)
+            self.action_device = None
+        elif action == "forget":
+            self._show_status("Forgetting...")
+            await self.bluetooth.forget(device)
+            self.action_device = None
 
         await self._refresh()
         return True
@@ -94,4 +111,8 @@ class BluetoothPage(ListPage):
         return await self.item_selected(self.selected_value)
 
     async def right_pressed(self):
+        if self.action_device is not None:
+            self.action_device = None
+            await self._refresh()
+            return True
         return 'Settings'

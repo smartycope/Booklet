@@ -1,4 +1,5 @@
 import asyncio
+import math
 import time
 import spidev
 import logging
@@ -10,6 +11,15 @@ from src import CONFIG
 from src.screens.BaseScreen import BaseScreen
 
 class Screen(BaseScreen):
+    @staticmethod
+    def _brightness_duty_cycle(value):
+        """Map a normalized setting to the backlight on a logarithmic scale."""
+        value = max(0.0, min(1.0, float(value)))
+        if value in (0.0, 1.0):
+            return value / 2
+        scaled = math.expm1(value * math.log(10)) / 9
+        return scaled / 2
+
     @staticmethod
     def _open_spi(bus=0, device=0):
         try:
@@ -59,7 +69,7 @@ class Screen(BaseScreen):
     def brightness(self, value):
         # super().brightness = value
         CONFIG['brightness'] = value
-        self.gpio_bl_pin.value = value / 2
+        self.gpio_bl_pin.value = self._brightness_duty_cycle(value)
 
     def close(self):
         logging.debug("spi end")

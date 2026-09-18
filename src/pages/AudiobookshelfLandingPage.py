@@ -4,6 +4,15 @@ from src.pages.ListPage import ListPage
 
 class AudiobookshelfLandingPage(ListPage):
     @staticmethod
+    def _login_error_message(error: Exception | None) -> str:
+        current = error
+        while current is not None:
+            if getattr(current, "status", None) == 530:
+                return "Login failed: server may be down (530)"
+            current = current.__cause__ or current.__context__
+        return "Login failed: check server and API key"
+
+    @staticmethod
     def _format_storage(size: int) -> str:
         value = float(size)
         units = ("bytes", "KB", "MB", "GB", "TB")
@@ -36,6 +45,11 @@ class AudiobookshelfLandingPage(ListPage):
             ("Play Downloaded Book", ("SelectDownloadedBook", {"delete": False})),
             ("Delete Downloaded Book", ("SelectDownloadedBook", {"delete": True})),
         ])
+        if not online:
+            items.append((
+                self._login_error_message(getattr(self.manager, "api_error", None)),
+                None,
+            ))
         try:
             free_space = self._format_storage(DownloadStore().available_bytes())
             storage_label = f"Free space: {free_space}"

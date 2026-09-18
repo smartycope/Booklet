@@ -211,3 +211,9 @@ class BluetoothManager:
     async def disconnect(self, device):
         interface = await self._interface(device.path, DEVICE_INTERFACE)
         await interface.call_disconnect()
+
+    async def forget(self, device):
+        if device.connected:
+            await self.disconnect(device)
+        adapter = await self._interface(self.adapter_path, ADAPTER_INTERFACE)
+        await adapter.call_remove_device(device.path)

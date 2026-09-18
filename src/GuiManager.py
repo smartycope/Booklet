@@ -39,9 +39,17 @@ from src.pages.PlayerPage import PlayerPage
 
 class GuiManager:
     """ Manage the connection between the screen and the pages. Handles events, and switches between pages. """
-    def __init__(self, player:AudioPlayer, api:AudiobookshelfApiManager | None, screen:BaseScreen, first_page:Page):
+    def __init__(
+        self,
+        player: AudioPlayer,
+        api: AudiobookshelfApiManager | None,
+        screen: BaseScreen,
+        first_page: Page,
+        api_error: Exception | None = None,
+    ):
         self.player = player
         self.api = api
+        self.api_error = api_error
         self.screen = screen
         self.pages = pages
         self.small_font = font(11)
