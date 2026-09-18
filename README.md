@@ -31,6 +31,20 @@ TODO: Add a battery
 ### Set up the OS
 Write the OS to a micro SD card. I use Raspberry Pi Imager, and install a generic 64-bit headless image. You can optionally pre-set a network connection from the Imager config menu.
 
+Enable SPI before starting Booklet. The Waveshare LCD uses SPI bus 0 and chip
+select 0 (`/dev/spidev0.0`), and Raspberry Pi OS disables SPI by default:
+
+```bash
+sudo raspi-config nonint do_spi 0
+sudo reboot
+```
+
+After reconnecting, verify that the display interface is available:
+
+```bash
+test -e /dev/spidev0.0 && echo "SPI is ready"
+```
+
 ### Get the project & Dependancies
 Log in or SSH into the pi, and from the home folder, run:
 ```bash

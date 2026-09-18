@@ -10,6 +10,18 @@ from src import CONFIG
 from src.screens.BaseScreen import BaseScreen
 
 class Screen(BaseScreen):
+    @staticmethod
+    def _open_spi(bus=0, device=0):
+        try:
+            return spidev.SpiDev(bus, device)
+        except FileNotFoundError as error:
+            path = f"/dev/spidev{bus}.{device}"
+            raise RuntimeError(
+                f"SPI display device {path} is unavailable. Enable SPI with "
+                "`sudo raspi-config nonint do_spi 0`, reboot the Raspberry Pi, "
+                f"and verify that {path} exists."
+            ) from error
+
     def __init__(self,
         spi=None,
         spi_freq=40000000,
@@ -17,7 +29,6 @@ class Screen(BaseScreen):
         dc = 25,
         bl = 24,
         bl_freq=1000,
-        **kwargs
     ):
         self.spi_freq = spi_freq
         self.bl_freq = bl_freq
@@ -26,14 +37,16 @@ class Screen(BaseScreen):
         self.gpio_dc_pin = DigitalOutputDevice(dc, active_high=True, initial_value=False)
         self.gpio_bl_pin = PWMOutputDevice(bl, frequency=self.bl_freq)
 
-        #Initialize SPI
-        self.spi = spi or spidev.SpiDev(0,0)
+        # Initialize SPI. Raspberry Pi OS must expose /dev/spidev0.0 first.
+        self.spi = spi if spi is not None else self._open_spi()
         self.spi.max_speed_hz = spi_freq
         self.spi.mode = 0b00
 
-        super().__init__(**kwargs)
+        super().__init__()
         self.init_display()
         # self.brightness = CONFIG.get('brightness', 1.0)
+        # Trigger the setter
+        self.brightness = self.brightness
 
         atexit.register(self.close)
 
