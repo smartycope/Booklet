@@ -23,6 +23,8 @@ class BaseScreen(ABC):
     width  = WIDTH
     height = HEIGHT
 
+    hold_time = .2
+
     @property
     def brightness(self):
         return CONFIG['brightness']
@@ -34,16 +36,10 @@ class BaseScreen(ABC):
 
     def __init__(self, brightness=1):
         self._display_awake = True
-        self.gpio_key_up_pin    = Button(
-            self.KEY_UP_PIN, pull_up=True, active_state=None,
-            hold_time=.2, hold_repeat=True,
-        )
-        self.gpio_key_down_pin  = Button(
-            self.KEY_DOWN_PIN, pull_up=True, active_state=None,
-            hold_time=.2, hold_repeat=True,
-        )
-        self.gpio_key_left_pin  = Button(self.KEY_LEFT_PIN, pull_up=True, active_state=None)
-        self.gpio_key_right_pin = Button(self.KEY_RIGHT_PIN, pull_up=True, active_state=None)
+        self.gpio_key_up_pin    = Button(self.KEY_UP_PIN, pull_up=True, active_state=None, hold_time=self.hold_time, hold_repeat=True)
+        self.gpio_key_down_pin  = Button(self.KEY_DOWN_PIN, pull_up=True, active_state=None, hold_time=self.hold_time, hold_repeat=True)
+        self.gpio_key_left_pin  = Button(self.KEY_LEFT_PIN, pull_up=True, active_state=None, hold_time=self.hold_time, hold_repeat=True)
+        self.gpio_key_right_pin = Button(self.KEY_RIGHT_PIN, pull_up=True, active_state=None, hold_time=self.hold_time, hold_repeat=True)
         self.gpio_key_center_pin= Button(self.KEY_CENTER_PIN, pull_up=True, active_state=None)
 
         self.gpio_key1_pin      = Button(self.KEY1_PIN, pull_up=True, active_state=None)

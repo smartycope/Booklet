@@ -232,6 +232,12 @@ class SettingsPage(ListPage):
     async def right_pressed(self):
         return self._change_setting(1)
 
+    async def left_held(self):
+        return self._change_setting(-1)
+
+    async def right_held(self):
+        return self._change_setting(1)
+
     async def center_pressed(self):
         if self.selected_value == "check_for_updates":
             return await self.check_for_updates()

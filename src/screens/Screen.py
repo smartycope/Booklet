@@ -19,7 +19,6 @@ class Screen(BaseScreen):
         bl_freq=1000,
         **kwargs
     ):
-        super().__init__(**kwargs)
         self.spi_freq = spi_freq
         self.bl_freq = bl_freq
 
@@ -32,18 +31,21 @@ class Screen(BaseScreen):
         self.spi.max_speed_hz = spi_freq
         self.spi.mode = 0b00
 
+        super().__init__(**kwargs)
         self.init_display()
-        self.brightness = CONFIG.get('brightness', 1.0)
+        # self.brightness = CONFIG.get('brightness', 1.0)
 
         atexit.register(self.close)
 
     @property
     def brightness(self):
-        return super().brightness
+        # return super().brightness
+        return CONFIG['brightness']
 
     @brightness.setter
     def brightness(self, value):
-        super().brightness = value
+        # super().brightness = value
+        CONFIG['brightness'] = value
         self.gpio_bl_pin.value = value / 2
 
     def close(self):

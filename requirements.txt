@@ -6,4 +6,4 @@ python-vlc>=3.0.21203
 pillow
 numpy
 lgpio
-# pigpio
+aiohttp

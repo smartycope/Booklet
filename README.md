@@ -118,6 +118,7 @@ The `audiobookshelf_url` is the URL of your audiobookshelf instance. It's self h
 
 ## TODO
 Not yet in scope, but eventually we'll want to implement:
+* profile stuff
 * freeze dependancies
 * better playback acceleration algorithm
 * cover-art UI
