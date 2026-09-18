@@ -3,3 +3,7 @@ spidev
 aioaudiobookshelf>=0.1.25
 dbus-next
 python-vlc>=3.0.21203
+pillow
+numpy
+lgpio
+# pigpio

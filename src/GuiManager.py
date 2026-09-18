@@ -261,7 +261,7 @@ class GuiManager:
     @current_page.setter
     def current_page(self, page:Page):
         self._current_page = page
-        print(f"Navigating to {self._current_page.__class__.__name__}")
+        # print(f"Navigating to {self._current_page.__class__.__name__}")
         self.render()
 
     async def activate_book(self, book_id: str, local: bool, back_route):

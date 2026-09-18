@@ -27,6 +27,40 @@ TODO: Add a battery
 * Run program:
     * `python -m src`
 
+## Instructions from the ground up
+### Set up the OS
+Write the OS to a micro SD card. I use Raspberry Pi Imager, and install a generic 64-bit headless image. You can optionally pre-set a network connection from the Imager config menu.
+
+### Get the project & Dependancies
+Log in or SSH into the pi, and from the home folder, run:
+```bash
+# Update the pi
+sudo apt update
+# Install OS dependancies
+sudo apt install git vlc python3-dev python3-gdbm swig liblgpio-dev # python3-gpiozero
+# Grab the code
+git clone https://github.com/smartycope/Booklet
+cd Booklet
+# Create & activate a virtual environment
+python -m venv .
+source bin/activate
+# Install python dependancies
+pip install -r requirements.txt
+```
+
+### Set up the config file
+Next go to your audiobookshelf server, go to settings, click on "API Keys" and add a new API key.
+
+Then create a file at `~/booklet_config.json` and enter the following:
+```json
+{
+    "audiobookshelf_url": "https://your.audiobook.server.com/",
+    "audiobookshelf_api_key": "<the api key you just created>",
+    "audiobookshelf_library_name": "<the name of the library you want to use",
+    "download_directory": "~/Audiobooks"
+}
+```
+
 ## Install as a systemd service
 
 `Booklet.service` is a per-user systemd unit. It assumes the repository contents are directly in the Pi user's home directory, so `~/src` exists. Install it in the user unit directory:
@@ -84,6 +118,7 @@ The `audiobookshelf_url` is the URL of your audiobookshelf instance. It's self h
 
 ## TODO
 Not yet in scope, but eventually we'll want to implement:
+* freeze dependancies
 * better playback acceleration algorithm
 * cover-art UI
 * bookmarks

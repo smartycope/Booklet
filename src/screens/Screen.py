@@ -20,7 +20,6 @@ class Screen(BaseScreen):
         **kwargs
     ):
         super().__init__(**kwargs)
-        self.brightness = CONFIG.get('brightness', 1.0)
         self.spi_freq = spi_freq
         self.bl_freq = bl_freq
 
@@ -34,6 +33,7 @@ class Screen(BaseScreen):
         self.spi.mode = 0b00
 
         self.init_display()
+        self.brightness = CONFIG.get('brightness', 1.0)
 
         atexit.register(self.close)
 
