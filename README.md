@@ -51,7 +51,7 @@ Log in or SSH into the pi, and from the home folder, run:
 # Update the pi
 sudo apt update
 # Install OS dependancies
-sudo apt install git vlc python3-dev python3-gdbm swig liblgpio-dev # python3-gpiozero
+sudo apt install git vlc python3-dev python3-gdbm swig liblgpio-dev pulseaudio-module-bluetooth # python3-gpiozero
 # Grab the code
 git clone https://github.com/smartycope/Booklet
 cd Booklet
@@ -81,13 +81,16 @@ Then create a file at `~/booklet_config.json` and enter the following:
 
 ## Install as a systemd service
 
+Make sure to update the paths in Booklet.service with the username you picked.
+
 `Booklet.service` is a per-user systemd unit. It assumes the repository contents are directly in the Pi user's home directory, so `~/src` exists. Install it in the user unit directory:
 
 ```bash
-mkdir -p ~/.config/systemd/user
-cp ~/Booklet.service ~/.config/systemd/user/Booklet.service
-systemctl --user daemon-reload
-systemctl --user enable --now Booklet.service
+# mkdir -p ~/.config/systemd/user
+# cp ~/Booklet.service ~/.config/systemd/user/Booklet.service
+sudo cp Booklet.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now Booklet.service
 ```
 
 Enable lingering so the user's service manager—and therefore Booklet—starts during boot without waiting for an interactive login:
@@ -135,6 +138,9 @@ include that streamlit application -->
 The `audiobookshelf_url` is the URL of your audiobookshelf instance. It's self hosted. You can create an API key by going to `Settings > API Keys` in your audiobookshelf instance (you need to be logged in as the root user).
 
 ## TODO
+* Decrease the timeout when attempting to connect to bluetooth
+* Have the PlayerPage show "Loading..." where the time progress text is, which gets overwritten once it's loaded up
+* Add the ability to interrupt an attemtping connection to a bluetooth device (if that's something the library supports)
 * profile stuff
 * Need a wifi connection page -- will need a keyboard for this!
 * better playback acceleration algorithm
@@ -145,5 +151,6 @@ The `audiobookshelf_url` is the URL of your audiobookshelf instance. It's self h
 * background downloads?
 * concurrent downloads?
 * podcast support?
+
 
 Credit to ChatGPT for the icon

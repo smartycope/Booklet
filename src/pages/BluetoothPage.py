@@ -20,11 +20,15 @@ class BluetoothPage(ListPage):
 
     async def _items(self):
         if self.action_device is not None:
-            return {
-                "Disconnect": ("disconnect", self.action_device),
-                "Forget": ("forget", self.action_device),
-                "Back": ("back", None),
-            }
+            device = self.action_device
+            items = {}
+            if device.connected:
+                items["Disconnect"] = ("disconnect", device)
+            else:
+                items["Connect"] = ("connect", device)
+            items["Forget"] = ("forget", device)
+            items["Back"] = ("back", None)
+            return items
 
         if not await self.bluetooth.adapter_powered():
             return {"Turn Bluetooth on": ("power_on", None)}
@@ -36,10 +40,8 @@ class BluetoothPage(ListPage):
             if not (device.connected or device.paired or self.show_discovered):
                 continue
 
-            if device.connected:
+            if device.connected or device.paired:
                 action = "device_actions"
-            elif device.paired:
-                action = "connect"
             else:
                 action = "pair"
 
@@ -89,6 +91,7 @@ class BluetoothPage(ListPage):
         elif action == "connect":
             self._show_status("Connecting...")
             await self.bluetooth.connect(device)
+            self.action_device = None
         elif action == "device_actions":
             self.action_device = device
         elif action == "back":

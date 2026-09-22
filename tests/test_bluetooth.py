@@ -15,14 +15,18 @@ DEVICE = BluetoothDevice(
 
 
 class FakeBluetooth:
-    def __init__(self):
+    def __init__(self, device=DEVICE):
         self.calls = []
+        self.device = device
 
     async def adapter_powered(self):
         return True
 
     async def devices(self):
-        return [DEVICE]
+        return [self.device]
+
+    async def connect(self, device):
+        self.calls.append(("connect", device))
 
     async def disconnect(self, device):
         self.calls.append(("disconnect", device))
@@ -47,6 +51,29 @@ def test_connected_device_opens_disconnect_and_forget_menu():
     assert page.title == "Headphones"
     assert page.items == ["Disconnect", "Forget", "Back"]
     assert bluetooth.calls == []
+
+
+def test_paired_device_opens_menu_before_connecting():
+    device = BluetoothDevice(
+        path=DEVICE.path,
+        name=DEVICE.name,
+        address=DEVICE.address,
+        paired=True,
+        connected=False,
+    )
+    bluetooth = FakeBluetooth(device)
+    Page.manager = FakeManager()
+    page = asyncio.run(BluetoothPage(bluetooth=bluetooth))
+
+    asyncio.run(page.center_pressed())
+
+    assert page.items == ["Connect", "Forget", "Back"]
+    assert bluetooth.calls == []
+
+    asyncio.run(page.center_pressed())
+
+    assert bluetooth.calls == [("connect", device)]
+    assert page.title == "Connected Devices"
 
 
 def test_forget_action_uses_manager_and_returns_to_device_list():

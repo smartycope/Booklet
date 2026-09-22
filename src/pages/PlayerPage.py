@@ -108,7 +108,8 @@ class PlayerPage(Page, aobject):
     async def center_held(self):
         self.manager.player.pause()
         await self.manager.sync_active_playback(suppress_errors=True)
-        return self.back_route
+        # return self.back_route
+        return "Landing"
 
     # Seek backward
     async def left_pressed(self):
